@@ -7,7 +7,7 @@ Implementation and configuration options may change with each release. Please do
 
 ##How to use
 
-$("#container").myPlot(data,config);
+`$("#container").myPlot(data,config);`
 
 ###data
 
