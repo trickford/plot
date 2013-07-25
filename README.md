@@ -1,2 +1,4 @@
-mr-chart
+myPlot
 ========
+
+documentation
