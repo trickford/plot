@@ -193,8 +193,8 @@
 					height: $(this).height()
 				};
 
-			if(!self.$select){
-				$("<div>").css(css).appendTo($(this));
+			if(!self.$select.length){
+				$("<div>").addClass("mySelect").css(css).appendTo($(this));
 				self.$select = $("div.mySelect");
 			}else{
 				$(this).find("div").css(css);
@@ -203,7 +203,7 @@
 			$(this).mousemove(function(e){
 
 				var $el = $(this).find("div"),
-					parentOffset = $(this).offset()	,
+					parentOffset = $(this).offset(),
 					offset = $el.offset();
 
 				$el.css({
