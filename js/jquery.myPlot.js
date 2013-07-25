@@ -65,13 +65,14 @@
 		}).css(css).appendTo(self.$el);
 		self.$canvas = $("canvas.myPlot");
 
+		// create range container and set dimensions and positioning
 		selectContainer.attr({
 			height: self.config.height,
-			width: self.config.width,
-			class: self.config.selectClass
+			width: self.config.width
 		}).css(css).appendTo(self.$el);
 		self.$selectContainer = $("div.mySelectContainer");
 
+		// set dimensions of parent container
 		self.$el.css({
 			width: self.config.width,
 			height: self.config.height,
