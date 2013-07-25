@@ -172,8 +172,6 @@
 				self.context.moveTo(position.left, position.top);
 			}
 
-			//console.log(i,"drawing line from " + position.left + "," + position.top + " to " + nextPosition.left + "," + nextPosition.top);
-
 			if(dataPoint > 0){
 				self.context.lineTo(nextPosition.left, nextPosition.top);
 			}
@@ -202,7 +200,6 @@
 			}
 
 			$(this).mousemove(function(e){
-				console.log(e.offsetX, e.offsetY);
 
 				var $el = $(this).find("div"),
 					parentOffset = $(this).offset()	,
@@ -216,7 +213,6 @@
 				})
 			})
 		}).mouseup(function(e){
-			console.log(e.offsetX, e.offsetY);
 			$(this).unbind("mousemove");
 		});
 
