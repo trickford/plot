@@ -178,6 +178,8 @@
 		// set chart measurement units
 		unitWidth = self.config.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
+
+		self.range.unitWidth = unitWidth;
 		
 		self.graphContext.beginPath();
 
