@@ -41,8 +41,10 @@
 		}
 
 		if(typeof self.range === "undefined"){
-			self.range = {};
-			self.range.data = {};
+			self.range = {
+				from: {},
+				to: {}
+			}
 		}
 
 		self.rangeEvents();
@@ -242,20 +244,18 @@
 	Plot.prototype.calculateRange = function(){
 		var self = this;
 
-		self.range.from = Math.round(self.range.position.left / self.range.unitWidth);
-		self.range.to = Math.round(self.range.position.width / self.range.unitWidth) + self.range.from;
+		self.range.from.index = Math.round(self.range.position.left / self.range.unitWidth);
+		self.range.to.index = Math.round(self.range.position.width / self.range.unitWidth) + self.range.from.index;
 
-		self.range.data.from = self.data[self.range.from];
-		self.range.data.to = self.data[self.range.to];
-
-		self.returnRange();
+		self.range.from.data = self.data[self.range.from.index];
+		self.range.to.data = self.data[self.range.to.index];
 	}
 
 	Plot.prototype.returnRange = function(){
 		var self = this;
 
 		if(typeof self.callback === "function"){
-			self.callback(self.range.data);
+			self.callback({from: self.range.from.data, to: self.range.to.data});
 		}
 	}
 
@@ -280,6 +280,8 @@
 			self.drawRange($(this), rectFrom, rectTo);
 
 			$(this).unbind("mousemove");
+
+			self.returnRange();
 		})
 
 	}
