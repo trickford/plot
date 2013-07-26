@@ -14,25 +14,32 @@
 				lineStyle: {
 					lineColor: "#FF9900"
 				},
+				rangeStyle: {
+					color: "#E5E5E5",
+					opacity: 0.5
+				},
 				grid: {
 					draw: true
+				},
+				classes: {
+					graph: "myPlot",
+					range: "myRange"
 				}
 			};
 
 		self.config = $.extend({}, defaults, config);
 		self.data = data;
 		self.$el = $(elem);
-		self.$canvas = self.$el.find("canvas.myPlot");
-		self.$selectContainer = self.$el.find("div.mySelectContainer");
-		self.$select = self.$el.find("div.mySelect");
+
+		self.defineElements();
 
 		if(self.$canvas.length){
-			self.clearCanvas();
+			self.clearGraph();
 		}else{
 			self.createCanvas();
 		}
 
-		self.events();
+		self.rangeEvents();
 
 		if(self.config.style === "bar"){
 			self.drawBarGraph();
@@ -44,12 +51,19 @@
 
 	}
 
+	Plot.prototype.defineElements = function(){
+		var self = this;
+
+		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
+		self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
+	}
+
 	Plot.prototype.createCanvas = function(){
 		var self = this;
 
 		// create canvas element and range selector divs
-		var canvas = $("<canvas>").addClass("myPlot"),
-			selectContainer = $("<div>").addClass("mySelectContainer"),
+		var canvas = $("<canvas>").addClass(self.config.classes.graph),
+			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
 			css = {
 				position: "absolute",
 				top: 0,
@@ -63,14 +77,12 @@
 			height: self.config.height,
 			width: self.config.width
 		}).css(css).appendTo(self.$el);
-		self.$canvas = $("canvas.myPlot");
 
 		// create range container and set dimensions and positioning
-		selectContainer.attr({
+		rangeCanvas.attr({
 			height: self.config.height,
 			width: self.config.width
 		}).css(css).appendTo(self.$el);
-		self.$selectContainer = $("div.mySelectContainer");
 
 		// set dimensions of parent container
 		self.$el.css({
@@ -79,14 +91,24 @@
 			position: "relative"
 		});
 
-		self.context = self.$canvas[0].getContext("2d");
+		self.defineElements();
+
+		self.graphContext = self.$canvas[0].getContext("2d");
+		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
 	}
 
-	Plot.prototype.clearCanvas = function(){
+	Plot.prototype.clearGraph = function(){
 		var self = this;
 
-		self.context = self.$canvas[0].getContext("2d");
-		self.context.clearRect(0,0,self.config.width,self.config.height);
+		self.graphContext = self.$canvas[0].getContext("2d");
+		self.graphContext.clearRect(0,0,self.config.width,self.config.height);
+	}
+
+	Plot.prototype.clearRange = function(){
+		var self = this;
+
+		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
+		self.rangeContext.clearRect(0,0,self.config.width,self.config.height);
 	}
 
 	Plot.prototype.drawBarGraph = function(){
@@ -119,10 +141,10 @@
 					left: Math.round(unitWidth * i)
 				}
 
-			self.context.fillStyle = self.config.barStyle.barColor;
+			self.graphContext.fillStyle = self.config.barStyle.barColor;
 
 			if(dataPoint > 0){
-				self.context.fillRect(
+				self.graphContext.fillRect(
 					position.left,
 					self.config.height - position.height,
 					position.width,
@@ -149,7 +171,7 @@
 		unitWidth = self.config.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
 		
-		self.context.beginPath();
+		self.graphContext.beginPath();
 
 		for(var i = 0; i < self.data.length; i++){
 			var dataPoint = self.data[i][1],
@@ -167,55 +189,64 @@
 					top: self.config.height - (nextPoint * unitHeight),
 					left: Math.round(unitWidth * (i + 1))
 				}
-			self.context.strokeStyle = self.config.lineStyle.lineColor;
+			self.graphContext.strokeStyle = self.config.lineStyle.lineColor;
 
 			if(i == 0){
-				self.context.moveTo(position.left, position.top);
+				self.graphContext.moveTo(position.left, position.top);
 			}
 
 			if(dataPoint > 0){
-				self.context.lineTo(nextPosition.left, nextPosition.top);
+				self.graphContext.lineTo(nextPosition.left, nextPosition.top);
 			}
 		}
 
-		self.context.stroke();
+		self.graphContext.stroke();
 	}
 
-	Plot.prototype.events = function(){
-		var self = this;
-
-		// when selecting the range container, draw a box and send the range to the callback
-		self.$selectContainer.mousedown(function(e){
-			var css = {
-					position: "absolute",
-					top: 0,
-					left: e.offsetX,
-					height: $(this).height()
-				};
-
-			if(!self.$select.length){
-				$("<div>").addClass("mySelect").css(css).appendTo($(this));
-				self.$select = $("div.mySelect");
-			}else{
-				$(this).find("div").css(css);
+	Plot.prototype.drawRange = function(elem, from, to){
+		var self = this,
+			position = {
+				top: 0,
+				left: from,
+				height: elem.height(),
+				width: to - from
 			}
 
+		self.clearRange();
+
+		self.rangeContext.fillStyle = self.config.rangeStyle.color;
+		self.rangeContext.globalAlpha = self.config.rangeStyle.opacity;
+
+		self.rangeContext.fillRect(
+			position.left,
+			position.top,
+			position.width,
+			position.height
+		);
+	}
+
+	Plot.prototype.rangeEvents = function(){
+		var self = this,
+			rectFrom, rectTo;
+
+		// when selecting the range container, draw a box and send the range to the callback
+		self.$rangeCanvas.mousedown(function(e){
+			self.clearRange();
+
+			rectFrom = e.offsetX;
+
 			$(this).mousemove(function(e){
+				rectTo = e.offsetX;
 
-				var $el = $(this).find("div"),
-					parentOffset = $(this).offset(),
-					offset = $el.offset();
-
-				$el.css({
-					width: e.offsetX-offset.left+parentOffset.left,
-					background: "green",
-					opacity: 0.2,
-					border: "1px solid red"
-				})
+				self.drawRange($(this), rectFrom, rectTo);
 			})
 		}).mouseup(function(e){
+			rectTo = e.offsetX;
+
+			self.drawRange($(this), rectFrom, rectTo);
+
 			$(this).unbind("mousemove");
-		});
+		})
 
 	}
 
