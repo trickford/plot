@@ -1,4 +1,4 @@
-myPlot
+spoontwisted/plot
 ========
 
 THIS IS NOT READY FOR PRODUCTION USE
