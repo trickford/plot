@@ -22,8 +22,8 @@
 					draw: true
 				},
 				classes: {
-					graph: "myPlot",
-					range: "myRange"
+					graph: "plot",
+					range: "range"
 				}
 			};
 
@@ -286,7 +286,7 @@
 
 	}
 
-	$.fn.myPlot = function(data, config, callback){
+	$.fn.plot = function(data, config, callback){
 		new Plot(this, data, config, callback);
 		return this;
 	}
