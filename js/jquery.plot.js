@@ -16,7 +16,14 @@
 				},
 				rangeStyle: {
 					color: "#E5E5E5",
-					opacity: 0.5
+					opacity: 0.5,
+					handles: {
+						draw: true,
+						image: false,
+						width: 10,
+						height: 40,
+						color: "#868695"
+					}
 				},
 				grid: {
 					draw: true
@@ -43,8 +50,18 @@
 		if(typeof self.range === "undefined"){
 			self.range = {
 				from: {},
-				to: {}
+				to: {},
+				handles: {
+					points: {
+						left: {},
+						right: {}
+					}
+				}
 			}
+		}
+
+		if(self.config.rangeStyle.handles.image){
+			self.loadRangeImage();
 		}
 
 		self.rangeEvents();
@@ -222,7 +239,7 @@
 				left: from,
 				height: elem.height(),
 				width: to - from
-			}
+			};
 
 		self.clearRange();
 
@@ -239,10 +256,58 @@
 		self.range.position = position;
 
 		self.calculateRange();
+
+		// draw handles
+		if(self.config.rangeStyle.handles.draw){
+			self.rangeContext.globalAlpha = 1;
+
+			if(self.config.rangeStyle.handles.image){
+
+				if(self.range.position.width > self.range.handles.image.width + 2){
+					// place left handle
+					self.rangeContext.drawImage(
+						self.range.handles.image,
+						self.range.from.px - Math.round(self.range.handles.image.width / 2),
+						(self.range.position.height / 2) - Math.round(self.range.handles.image.height / 2)
+					);
+
+					// place right handle
+					self.rangeContext.drawImage(
+						self.range.handles.image,
+						self.range.to.px - Math.round(self.range.handles.image.width / 2),
+						(self.range.position.height / 2) - Math.round(self.range.handles.image.height / 2)
+					);
+				}
+			}else{
+				if(self.range.position.width > self.config.rangeStyle.handles.width + 2){
+
+					self.rangeContext.fillStyle = self.config.rangeStyle.handles.color;
+					// place left handle
+					self.rangeContext.fillRect(
+						self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2),
+						(self.range.position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
+						self.config.rangeStyle.handles.width,
+						self.config.rangeStyle.handles.height
+					);
+
+					// place right handle
+					self.rangeContext.fillRect(
+						self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2),
+						(self.range.position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
+						self.config.rangeStyle.handles.width,
+						self.config.rangeStyle.handles.height
+					);
+					
+				}
+			}
+		}
 	}
 
 	Plot.prototype.calculateRange = function(){
 		var self = this;
+
+		self.range.from.px = Math.round(self.range.position.left);
+		self.range.to.px = Math.round(self.range.position.width) + self.range.from.px;
 
 		self.range.from.index = Math.round(self.range.position.left / self.range.unitWidth);
 		self.range.to.index = Math.round(self.range.position.width / self.range.unitWidth) + self.range.from.index;
@@ -257,6 +322,14 @@
 		if(typeof self.callback === "function"){
 			self.callback({from: self.range.from.data, to: self.range.to.data});
 		}
+	}
+
+	Plot.prototype.loadRangeImage = function(){
+		var self = this;
+
+		self.range.handles.image = new Image();
+		self.range.handles.image.src = self.config.rangeStyle.handles.image;
+
 	}
 
 	Plot.prototype.rangeEvents = function(){
