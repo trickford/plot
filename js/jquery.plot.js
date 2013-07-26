@@ -239,6 +239,10 @@
 		self.range.position = position;
 
 		self.calculateRange();
+
+		if(self.config.rangeStyle.handles){
+			console.log("handles!");
+		}
 	}
 
 	Plot.prototype.calculateRange = function(){
