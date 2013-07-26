@@ -41,5 +41,9 @@ A JSON object with the following parameters
         },
         lineStyle: {
             lineColor: "#FF9900" // color of line
-        }  
+        },  
+        rangeStyle {
+            color: "#E5E5E5", // color of range box
+            opacity: 0.5 // opacity of range box
+        }
     }
