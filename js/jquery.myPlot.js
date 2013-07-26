@@ -30,6 +30,7 @@
 		self.config = $.extend({}, defaults, config);
 		self.data = data;
 		self.$el = $(elem);
+		self.callback = callback;
 
 		self.defineElements();
 
@@ -37,6 +38,11 @@
 			self.clearGraph();
 		}else{
 			self.createCanvas();
+		}
+
+		if(typeof self.range === "undefined"){
+			self.range = {};
+			self.range.data = {};
 		}
 
 		self.rangeEvents();
@@ -126,6 +132,8 @@
 		// set chart measurement units
 		unitWidth = self.config.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
+
+		self.range.unitWidth = unitWidth;
 
 		for(var i = 0; i < self.data.length; i++){
 			var dataPoint = self.data[i][1],
@@ -223,6 +231,30 @@
 			position.width,
 			position.height
 		);
+
+		self.range.position = position;
+
+		self.calculateRange();
+	}
+
+	Plot.prototype.calculateRange = function(){
+		var self = this;
+
+		self.range.from = Math.round(self.range.position.left / self.range.unitWidth);
+		self.range.to = Math.round(self.range.position.width / self.range.unitWidth) + self.range.from;
+
+		self.range.data.from = self.data[self.range.from];
+		self.range.data.to = self.data[self.range.to];
+
+		self.returnRange();
+	}
+
+	Plot.prototype.returnRange = function(){
+		var self = this;
+
+		if(typeof self.callback === "function"){
+			self.callback(self.range.data);
+		}
 	}
 
 	Plot.prototype.rangeEvents = function(){
