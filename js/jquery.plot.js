@@ -38,6 +38,7 @@
 		self.data = data;
 		self.$el = $(elem);
 		self.callback = callback;
+		self.range = self.$el.data("range");
 
 		self.defineElements();
 
@@ -180,6 +181,9 @@
 			}
 		}
 
+		self.updateRange();
+
+		self.$el.data("data",self.data);
 	}
 
 	Plot.prototype.drawLineGraph = function(){
@@ -230,6 +234,10 @@
 		}
 
 		self.graphContext.stroke();
+
+		self.updateRange();
+
+		self.$el.data("data",self.data);
 	}
 
 	Plot.prototype.drawRange = function(elem, from, to){
@@ -319,6 +327,46 @@
 		self.range.to.data = self.data[self.range.to.index];
 	}
 
+	Plot.prototype.updateRange = function(){
+		var self = this,
+			fromIndex = 0,
+			toIndex = 0;
+
+		if(typeof self.range.from.index !== "undefined"){
+			for(var i = 0; i < self.data.length; i++){
+				if(self.data[i][0] === self.range.from.data[0]){
+					fromIndex = i;
+				}
+				if(self.data[i][0] === self.range.to.data[0]){
+					toIndex = i;
+				}
+			}
+
+			if(fromIndex !== self.range.from.index || toIndex !== self.range.to.index){
+
+				if(fromIndex < 0){
+					fromIndex = 0;
+				}
+				if(toIndex < 1){
+					self.clearRange();
+					self.$el.removeData("range");
+				}
+
+				self.range.from.px = Math.round(fromIndex * self.range.unitWidth) || 0;
+				self.range.to.px = Math.round(toIndex * self.range.unitWidth) || 0;
+
+				self.range.from.index = fromIndex || 0;
+				self.range.to.index = toIndex || 0;
+
+				self.range.from.data = self.data[fromIndex] || null;
+				self.range.to.data = self.data[toIndex] || null;
+
+				self.drawRange(self.$rangeCanvas, self.range.from.px, self.range.to.px);
+			}
+		}
+
+	}
+
 	Plot.prototype.returnRange = function(){
 		var self = this, from, to;
 
@@ -332,6 +380,7 @@
 
 		if(typeof self.callback === "function"){
 			self.callback({from: from, to: to});
+			self.$el.data("range", self.range);
 		}
 	}
 
