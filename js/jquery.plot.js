@@ -238,7 +238,8 @@
 				top: 0,
 				left: from,
 				height: elem.height(),
-				width: to - from
+				width: Math.abs(to - from),
+				delta: to - from
 			};
 
 		self.clearRange();
@@ -249,7 +250,7 @@
 		self.rangeContext.fillRect(
 			position.left,
 			position.top,
-			position.width,
+			position.delta,
 			position.height
 		);
 
@@ -264,6 +265,7 @@
 			if(self.config.rangeStyle.handles.image){
 
 				if(self.range.position.width > self.range.handles.image.width + 2){
+
 					// place left handle
 					self.rangeContext.drawImage(
 						self.range.handles.image,
@@ -282,6 +284,7 @@
 				if(self.range.position.width > self.config.rangeStyle.handles.width + 2){
 
 					self.rangeContext.fillStyle = self.config.rangeStyle.handles.color;
+
 					// place left handle
 					self.rangeContext.fillRect(
 						self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2),
@@ -307,20 +310,28 @@
 		var self = this;
 
 		self.range.from.px = Math.round(self.range.position.left);
-		self.range.to.px = Math.round(self.range.position.width) + self.range.from.px;
+		self.range.to.px = Math.round(self.range.position.delta) + self.range.from.px;
 
 		self.range.from.index = Math.round(self.range.position.left / self.range.unitWidth);
-		self.range.to.index = Math.round(self.range.position.width / self.range.unitWidth) + self.range.from.index;
+		self.range.to.index = Math.round(self.range.position.delta / self.range.unitWidth) + self.range.from.index;
 
 		self.range.from.data = self.data[self.range.from.index];
 		self.range.to.data = self.data[self.range.to.index];
 	}
 
 	Plot.prototype.returnRange = function(){
-		var self = this;
+		var self = this, from, to;
+
+		if(self.range.to.index < self.range.from.index){
+			from = self.range.to.data;
+			to = self.range.from.data;
+		}else{
+			from = self.range.from.data;
+			to = self.range.to.data;
+		}
 
 		if(typeof self.callback === "function"){
-			self.callback({from: self.range.from.data, to: self.range.to.data});
+			self.callback({from: from, to: to});
 		}
 	}
 
