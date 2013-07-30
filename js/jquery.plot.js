@@ -244,27 +244,34 @@
 		var self = this,
 			position = {
 				top: 0,
-				left: from,
+				left: (from < to) ? from : to,
 				height: elem.height(),
-				width: Math.abs(to - from),
-				delta: to - from
+				width: (from < to) ? Math.abs(to - from) : Math.abs(to - from)
 			};
 
+		// clear range canvas
 		self.clearRange();
 
+		// draw rectangle
 		self.rangeContext.fillStyle = self.config.rangeStyle.color;
 		self.rangeContext.globalAlpha = self.config.rangeStyle.opacity;
 
 		self.rangeContext.fillRect(
 			position.left,
 			position.top,
-			position.delta,
+			position.width,
 			position.height
 		);
 
-		self.range.position = position;
+		// save range
+		self.range.from.px = Math.round(position.left);
+		self.range.to.px = Math.round(position.width) + self.range.from.px;
 
-		self.calculateRange();
+		self.range.from.index = Math.round(position.left / self.range.unitWidth);
+		self.range.to.index = Math.round(position.width / self.range.unitWidth) + self.range.from.index;
+
+		self.range.from.data = self.data[self.range.from.index];
+		self.range.to.data = self.data[self.range.to.index];
 
 		// draw handles
 		if(self.config.rangeStyle.handles.draw){
@@ -272,31 +279,31 @@
 
 			if(self.config.rangeStyle.handles.image){
 
-				if(self.range.position.width > self.range.handles.image.width + 2){
+				if(position.width > self.range.handles.image.width + 2){
 
 					// place left handle
 					self.rangeContext.drawImage(
 						self.range.handles.image,
 						self.range.from.px - Math.round(self.range.handles.image.width / 2),
-						(self.range.position.height / 2) - Math.round(self.range.handles.image.height / 2)
+						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
 					);
 
 					// place right handle
 					self.rangeContext.drawImage(
 						self.range.handles.image,
 						self.range.to.px - Math.round(self.range.handles.image.width / 2),
-						(self.range.position.height / 2) - Math.round(self.range.handles.image.height / 2)
+						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
 					);
 				}
 			}else{
-				if(self.range.position.width > self.config.rangeStyle.handles.width + 2){
+				if(position.width > self.config.rangeStyle.handles.width + 2){
 
 					self.rangeContext.fillStyle = self.config.rangeStyle.handles.color;
 
 					// place left handle
 					self.rangeContext.fillRect(
 						self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2),
-						(self.range.position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
+						(position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
 						self.config.rangeStyle.handles.width,
 						self.config.rangeStyle.handles.height
 					);
@@ -304,7 +311,7 @@
 					// place right handle
 					self.rangeContext.fillRect(
 						self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2),
-						(self.range.position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
+						(position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
 						self.config.rangeStyle.handles.width,
 						self.config.rangeStyle.handles.height
 					);
@@ -312,19 +319,6 @@
 				}
 			}
 		}
-	}
-
-	Plot.prototype.calculateRange = function(){
-		var self = this;
-
-		self.range.from.px = Math.round(self.range.position.left);
-		self.range.to.px = Math.round(self.range.position.delta) + self.range.from.px;
-
-		self.range.from.index = Math.round(self.range.position.left / self.range.unitWidth);
-		self.range.to.index = Math.round(self.range.position.delta / self.range.unitWidth) + self.range.from.index;
-
-		self.range.from.data = self.data[self.range.from.index];
-		self.range.to.data = self.data[self.range.to.index];
 	}
 
 	Plot.prototype.updateRange = function(){
@@ -368,18 +362,10 @@
 	}
 
 	Plot.prototype.returnRange = function(){
-		var self = this, from, to;
-
-		if(self.range.to.index < self.range.from.index){
-			from = self.range.to.data;
-			to = self.range.from.data;
-		}else{
-			from = self.range.from.data;
-			to = self.range.to.data;
-		}
+		var self = this;
 
 		if(typeof self.callback === "function"){
-			self.callback({from: from, to: to});
+			self.callback({from: self.range.from.data, to: self.range.to.data});
 			self.$el.data("range", self.range);
 		}
 	}
