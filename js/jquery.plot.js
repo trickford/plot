@@ -53,10 +53,8 @@
 				from: {},
 				to: {},
 				handles: {
-					points: {
-						left: {},
-						right: {}
-					}
+					left: {},
+					right: {}
 				}
 			}
 		}
@@ -287,6 +285,7 @@
 						self.range.from.px - Math.round(self.range.handles.image.width / 2),
 						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
 					);
+					self.range.handles.left = [(self.range.from.px - Math.round(self.range.handles.image.width / 2)),(self.range.from.px + Math.round(self.range.handles.image.width / 2))];
 
 					// place right handle
 					self.rangeContext.drawImage(
@@ -294,6 +293,7 @@
 						self.range.to.px - Math.round(self.range.handles.image.width / 2),
 						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
 					);
+					self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
 				}
 			}else{
 				if(position.width > self.config.rangeStyle.handles.width + 2){
@@ -307,6 +307,7 @@
 						self.config.rangeStyle.handles.width,
 						self.config.rangeStyle.handles.height
 					);
+					self.range.handles.left = [(self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2)),(self.range.from.px + Math.round(self.config.rangeStyle.handles.width / 2))];
 
 					// place right handle
 					self.rangeContext.fillRect(
@@ -315,6 +316,7 @@
 						self.config.rangeStyle.handles.width,
 						self.config.rangeStyle.handles.height
 					);
+					self.range.handles.right = [(self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2)),(self.range.to.px + Math.round(self.config.rangeStyle.handles.width / 2))];
 					
 				}
 			}
@@ -379,28 +381,98 @@
 	}
 
 	Plot.prototype.rangeEvents = function(){
-		var self = this,
-			rectFrom, rectTo;
+		var rect = {},
+			selecting = false,
+			resizing = false,
+			self = this;
+
+		// get cursor location, determine if a resize event is applicable
+		self.$el.mousemove(function(e){
+			rect.x = e.offsetX;
+			rect.y = e.offsetY;
+
+			if(!selecting){
+				if(e.offsetX > self.range.handles.left[0] && e.offsetX < self.range.handles.left[1]){
+
+					resizing = "left";
+					self.$rangeCanvas.css("cursor", "ew-resize");
+
+				}else if(e.offsetX > self.range.handles.right[0] && e.offsetX < self.range.handles.right[1]){
+
+					resizing = "right";
+					self.$rangeCanvas.css("cursor", "ew-resize");
+
+				}else{
+
+					resizing = false;
+					self.$rangeCanvas.css({cursor: "default"});
+
+				}
+			}
+		})
 
 		// when selecting the range container, draw a box and send the range to the callback
 		self.$rangeCanvas.mousedown(function(e){
-			self.clearRange();
+			e.originalEvent.preventDefault();
 
-			rectFrom = e.offsetX;
+			if(resizing){
 
-			$(this).mousemove(function(e){
-				rectTo = e.offsetX;
+				// resize range
+				self.$rangeCanvas.mousemove(function(e){
 
-				self.drawRange($(this), rectFrom, rectTo);
-			})
-		}).mouseup(function(e){
-			rectTo = e.offsetX;
+					if(resizing === "left"){
+						rect.from = e.offsetX;
+					}else if(resizing === "right"){
+						rect.to = e.offsetX;
+					}
+					self.$rangeCanvas.css("cursor", "ew-resize");
 
-			self.drawRange($(this), rectFrom, rectTo);
+					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
-			$(this).unbind("mousemove");
+				}).mouseup(function(e){
 
-			self.returnRange();
+					self.$rangeCanvas.unbind("mousemove");
+					self.$rangeCanvas.unbind("mouseup");
+
+					if(resizing){
+						self.returnRange();
+					}
+
+					self.$rangeCanvas.css({cursor: "default"});
+
+					selecting = false;
+					resizing = false;
+				})
+			}else{
+
+				// select range
+				self.$rangeCanvas.mousemove(function(e){
+					e.originalEvent.preventDefault();
+
+					if(!selecting){
+						selecting = true;
+						rect.from = e.offsetX;
+						self.$rangeCanvas.css("cursor", "ew-resize");
+					}
+					rect.to = e.offsetX;
+
+					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+				}).mouseup(function(e){
+
+					self.$rangeCanvas.unbind("mousemove");
+					self.$rangeCanvas.unbind("mouseup");
+
+					if(selecting){
+						self.returnRange();
+					}
+
+					self.$rangeCanvas.css({cursor: "default"});
+
+					selecting = false;
+					resizing = false;
+				})
+			}
 		})
 
 	}
