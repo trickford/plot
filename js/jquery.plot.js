@@ -385,6 +385,7 @@
 			selecting = false,
 			resizing = false,
 			movable = false,
+			moving = false,
 			self = this;
 
 		// get cursor location, determine if a resize event is applicable
@@ -395,21 +396,27 @@
 			if(!selecting){
 				if(e.offsetX > self.range.handles.left[0] && e.offsetX < self.range.handles.left[1]){
 
-					resizing = "left";
-					movable = false;
-					self.$rangeCanvas.css("cursor", "ew-resize");
+					if(!moving){
+						resizing = "left";
+						movable = false;
+						self.$rangeCanvas.css("cursor", "ew-resize");
+					}
 
 				}else if(e.offsetX > self.range.handles.right[0] && e.offsetX < self.range.handles.right[1]){
 
-					resizing = "right";
-					movable = false;
-					self.$rangeCanvas.css("cursor", "ew-resize");
+					if(!moving){
+						resizing = "right";
+						movable = false;
+						self.$rangeCanvas.css("cursor", "ew-resize");
+					}
 
 				}else if(e.offsetX > self.range.handles.left[1] && e.offsetX < self.range.handles.right[0]){
 
-					resizing = false;
-					movable = true;
-					self.$rangeCanvas.css("cursor", "all-scroll");
+					if(!moving){
+						resizing = false;
+						movable = true;
+						self.$rangeCanvas.css("cursor", "all-scroll");
+					}
 
 				}else{
 
@@ -465,13 +472,9 @@
 
 				// resize range
 				self.$rangeCanvas.mousemove(function(e){
+					moving = true;
 					
 					rect.delta = rect.click.pos - rect.x;
-
-					// if mouse moves outside of selection, unbind move event
-					if(rect.x < rect.from || rect.x > rect.to || rect.x > self.config.width || rect.x < 0){
-						self.$rangeCanvas.unbind("mousemove");
-					}
 
 					// if new position is within canvas, redraw range, else set range to appropriate edge
 					if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.config.width){
@@ -503,6 +506,7 @@
 					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
 				}).mouseup(function(e){
+					moving = false;
 
 					self.$rangeCanvas.unbind("mousemove");
 					self.$rangeCanvas.unbind("mouseup");
