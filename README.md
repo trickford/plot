@@ -32,18 +32,18 @@ This will be updated in the future to build the chart based on the first item in
 A JSON object with the following parameters
 
     {  
-        width: 540, // width of canvas
-        height: 300, // height of canvas
-        style: "bar", // style of chart ("line" or "bar")
-        barStyle: {
-            hPadding: 2, // padding around bars
-            barColor: "#FF9900" // color of bars
+        'width': 540, // width of canvas
+        'height': 300, // height of canvas
+        'style': "bar", // style of chart ("line" or "bar")
+        'barStyle': {
+            'hPadding': 2, // padding around bars
+            'barColor': "#FF9900" // color of bars
         },
-        lineStyle: {
-            lineColor: "#FF9900" // color of line
+        'lineStyle': {
+            'lineColor': "#FF9900" // color of line
         },  
-        rangeStyle {
-            color: "#E5E5E5", // color of range box
-            opacity: 0.5 // opacity of range box
+        'rangeStyle': {
+            'color': "#E5E5E5", // color of range box
+            'opacity': 0.5 // opacity of range box
         }
     }
