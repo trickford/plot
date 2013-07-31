@@ -385,7 +385,6 @@
 			selecting = false,
 			resizing = false,
 			movable = false,
-			movePosition,
 			self = this;
 
 		// get cursor location, determine if a resize event is applicable
