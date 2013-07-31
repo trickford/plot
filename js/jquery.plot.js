@@ -384,6 +384,8 @@
 		var rect = {},
 			selecting = false,
 			resizing = false,
+			movable = false,
+			movePosition,
 			self = this;
 
 		// get cursor location, determine if a resize event is applicable
@@ -395,16 +397,25 @@
 				if(e.offsetX > self.range.handles.left[0] && e.offsetX < self.range.handles.left[1]){
 
 					resizing = "left";
+					movable = false;
 					self.$rangeCanvas.css("cursor", "ew-resize");
 
 				}else if(e.offsetX > self.range.handles.right[0] && e.offsetX < self.range.handles.right[1]){
 
 					resizing = "right";
+					movable = false;
 					self.$rangeCanvas.css("cursor", "ew-resize");
+
+				}else if(e.offsetX > self.range.handles.left[1] && e.offsetX < self.range.handles.right[0]){
+
+					resizing = false;
+					movable = true;
+					self.$rangeCanvas.css("cursor", "all-scroll");
 
 				}else{
 
 					resizing = false;
+					movable = false;
 					self.$rangeCanvas.css({cursor: "default"});
 
 				}
@@ -414,6 +425,12 @@
 		// when selecting the range container, draw a box and send the range to the callback
 		self.$rangeCanvas.mousedown(function(e){
 			e.originalEvent.preventDefault();
+			rect.width = self.range.to.px - self.range.from.px;
+			rect.click = {
+				pos: e.offsetX,
+				from: rect.from,
+				to: rect.to
+			};
 
 			if(resizing){
 
@@ -442,7 +459,67 @@
 
 					selecting = false;
 					resizing = false;
+					movable = false;
 				})
+
+			}else if(movable){
+
+				// resize range
+				self.$rangeCanvas.mousemove(function(e){
+					
+					rect.delta = rect.click.pos - rect.x;
+
+					// if mouse moves outside of selection, unbind move event
+					if(rect.x < rect.from || rect.x > rect.to || rect.x > self.config.width || rect.x < 0){
+						self.$rangeCanvas.unbind("mousemove");
+					}
+
+					// if new position is within canvas, redraw range, else set range to appropriate edge
+					if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.config.width){
+
+						rect.from = rect.click.from - rect.delta;
+						rect.to = rect.click.to - rect.delta;
+
+					}else{
+
+						// if range starts before left edge, push range to left edge
+						if((rect.click.from - rect.delta) <= 0){
+
+							rect.from = 0;
+							rect.to = rect.from + rect.width;
+
+						}
+
+						// if range ends after right edge, push range to right edge
+						if((rect.click.to - rect.delta) >= self.config.width){
+
+							rect.from = rect.to - rect.width;
+							rect.to = self.config.width;
+
+						}
+					}
+
+					self.$rangeCanvas.css("cursor", "all-scroll");
+
+					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+				}).mouseup(function(e){
+
+					self.$rangeCanvas.unbind("mousemove");
+					self.$rangeCanvas.unbind("mouseup");
+
+					if(movable){
+						self.returnRange();
+					}
+
+					self.$rangeCanvas.css({cursor: "default"});
+
+					selecting = false;
+					resizing = false;
+					movable = false;
+
+				})
+
 			}else{
 
 				// select range
@@ -471,6 +548,7 @@
 
 					selecting = false;
 					resizing = false;
+					movable = false;
 				})
 			}
 		})
