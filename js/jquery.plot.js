@@ -400,8 +400,7 @@
 			resizable = false,
 			resizing = false,
 			movable = false,
-			moving = false,
-			messageSent = false;
+			moving = false;
 
 		// remove all existing mousemove events to prevent duplicate event firign
 		self.$el.unbind("mousemove");
