@@ -265,8 +265,8 @@
 		self.range.from.px = Math.round(position.left);
 		self.range.to.px = Math.round(position.width) + self.range.from.px;
 
-		self.range.from.index = Math.round(position.left / self.range.unitWidth);
-		self.range.to.index = Math.round(position.width / self.range.unitWidth) + self.range.from.index;
+		self.range.from.index = Math.round(self.range.from.px / self.range.unitWidth);
+		self.range.to.index = Math.round((self.range.to.px / self.range.unitWidth) - 1);
 
 		self.range.from.data = self.data[self.range.from.index];
 		self.range.to.data = self.data[self.range.to.index];
@@ -277,7 +277,9 @@
 
 			if(self.config.rangeStyle.handles.image){
 
-				if(position.width > self.range.handles.image.width + 2){
+				if(position.width > self.range.handles.image.width * 2){
+					self.range.handles.width = self.range.handles.image.width;
+					self.range.handles.show = true;
 
 					// place left handle
 					self.rangeContext.drawImage(
@@ -294,9 +296,13 @@
 						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
 					);
 					self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
+				}else{
+					self.range.handles.show = true;
 				}
 			}else{
-				if(position.width > self.config.rangeStyle.handles.width + 2){
+				if(position.width > self.config.rangeStyle.handles.width * 2){
+					self.range.handles.width = self.config.rangeStyle.handles.width;
+					self.range.handles.show = true;
 
 					self.rangeContext.fillStyle = self.config.rangeStyle.handles.color;
 
@@ -318,6 +324,8 @@
 					);
 					self.range.handles.right = [(self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2)),(self.range.to.px + Math.round(self.config.rangeStyle.handles.width / 2))];
 					
+				}else{
+					self.range.handles.show = false;
 				}
 			}
 		}
@@ -381,46 +389,55 @@
 	}
 
 	Plot.prototype.rangeEvents = function(){
-		var rect = {},
+		var self = this,
+			rect = {
+				from: self.range.from.px,
+				to: self.range.to.px,
+				width: self.range.to.px - self.range.from.px,
+				handles: self.range.handles
+			},
 			selecting = false,
+			resizable = false,
 			resizing = false,
 			movable = false,
 			moving = false,
-			self = this;
+			messageSent = false;
+
+		// remove all existing mousemove events to prevent duplicate event firign
+		self.$el.unbind("mousemove");
+		self.$rangeCanvas.unbind("mousedown");
+		self.$rangeCanvas.unbind("mousemove");
+		self.$rangeCanvas.unbind("mouseup");
 
 		// get cursor location, determine if a resize event is applicable
 		self.$el.mousemove(function(e){
 			rect.x = e.offsetX;
 			rect.y = e.offsetY;
 
-			if(!selecting){
-				if(e.offsetX > self.range.handles.left[0] && e.offsetX < self.range.handles.left[1]){
+			if(!selecting && !moving && !resizing){
+				if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
+					if(rect.x < rect.handles.left[1]){
 
-					if(!moving){
-						resizing = "left";
+						resizable = "left";
 						movable = false;
 						self.$rangeCanvas.css("cursor", "ew-resize");
-					}
 
-				}else if(e.offsetX > self.range.handles.right[0] && e.offsetX < self.range.handles.right[1]){
+					}else if(rect.x > rect.handles.right[0]){
 
-					if(!moving){
-						resizing = "right";
+						resizable = "right";
 						movable = false;
 						self.$rangeCanvas.css("cursor", "ew-resize");
-					}
 
-				}else if(e.offsetX > self.range.handles.left[1] && e.offsetX < self.range.handles.right[0]){
+					}else{
 
-					if(!moving){
-						resizing = false;
+						resizable = false;
 						movable = true;
 						self.$rangeCanvas.css("cursor", "all-scroll");
-					}
 
+					}
 				}else{
 
-					resizing = false;
+					resizable = false;
 					movable = false;
 					self.$rangeCanvas.css({cursor: "default"});
 
@@ -438,14 +455,15 @@
 				to: rect.to
 			};
 
-			if(resizing){
+			if(resizable){
 
 				// resize range
 				self.$rangeCanvas.mousemove(function(e){
+					resizing = true;
 
-					if(resizing === "left"){
+					if(resizable === "left"){
 						rect.from = e.offsetX;
-					}else if(resizing === "right"){
+					}else if(resizable === "right"){
 						rect.to = e.offsetX;
 					}
 					self.$rangeCanvas.css("cursor", "ew-resize");
@@ -453,24 +471,25 @@
 					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
 				}).mouseup(function(e){
+					resizing = false;
 
 					self.$rangeCanvas.unbind("mousemove");
 					self.$rangeCanvas.unbind("mouseup");
 
-					if(resizing){
+					if(resizable){
 						self.returnRange();
 					}
 
 					self.$rangeCanvas.css({cursor: "default"});
 
 					selecting = false;
-					resizing = false;
+					resizable = false;
 					movable = false;
 				})
 
 			}else if(movable){
 
-				// resize range
+				// move range
 				self.$rangeCanvas.mousemove(function(e){
 					moving = true;
 					
@@ -518,7 +537,7 @@
 					self.$rangeCanvas.css({cursor: "default"});
 
 					selecting = false;
-					resizing = false;
+					resizable = false;
 					movable = false;
 
 				})
@@ -539,6 +558,7 @@
 					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
 				}).mouseup(function(e){
+					rect.width = self.range.to.px - self.range.from.px;
 
 					self.$rangeCanvas.unbind("mousemove");
 					self.$rangeCanvas.unbind("mouseup");
@@ -550,7 +570,7 @@
 					self.$rangeCanvas.css({cursor: "default"});
 
 					selecting = false;
-					resizing = false;
+					resizable = false;
 					movable = false;
 				})
 			}

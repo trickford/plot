@@ -7,7 +7,7 @@ Implementation and configuration options may change with each release. Please do
 
 ##How to use
 
-`$("#container").plot(data,config);`
+`$("#container").plot(data, config, callback);`
 
 ###data
 
@@ -46,4 +46,12 @@ A JSON object with the following parameters
             "color": "#E5E5E5", // color of range box
             "opacity": 0.5 // opacity of range box
         }
+    }
+
+###callback
+A function with one parameter (data) to call when a range has been selected on the chart
+
+    function(data){
+        console.log(data);
+        console.log("from: " + data.from[0] + ", to: " + data.to[0]);
     }
