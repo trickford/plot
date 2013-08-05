@@ -26,7 +26,9 @@
 					}
 				},
 				grid: {
-					draw: true
+					draw: true,
+					interval: 10,
+					color: "#F0F0F0"
 				},
 				classes: {
 					graph: "plot",
@@ -39,6 +41,7 @@
 		self.$el = $(elem);
 		self.callback = callback;
 		self.range = self.$el.data("range");
+		self.grid = {};
 
 		self.defineElements();
 
@@ -151,7 +154,13 @@
 		unitWidth = self.config.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
 
-		self.range.unitWidth = unitWidth;
+		self.grid.unitWidth = unitWidth;
+		self.grid.unitHeight = unitHeight;
+		self.grid.units = heightUnits + 1;
+		
+		if(self.config.grid.draw){
+			self.drawGrid();
+		}
 
 		for(var i = 0; i < self.data.length; i++){
 			var dataPoint = self.data[i][1],
@@ -200,7 +209,13 @@
 		unitWidth = self.config.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
 
-		self.range.unitWidth = unitWidth;
+		self.grid.unitWidth = unitWidth;
+		self.grid.unitHeight = unitHeight;
+		self.grid.units = heightUnits + 1;
+
+		if(self.config.grid.draw){
+			self.drawGrid();
+		}
 		
 		self.graphContext.beginPath();
 
@@ -238,6 +253,37 @@
 		self.$el.data("data",self.data);
 	}
 
+	Plot.prototype.drawGrid = function(){
+
+		var self = this;
+
+		self.graphContext.beginPath();
+		self.graphContext.strokeStyle = self.config.grid.color;
+
+		// draw vertical lines
+		for(var i = 0; i < (self.data.length / self.config.grid.interval); i++){
+
+			if(i > 0){
+				self.graphContext.moveTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), 0);
+				self.graphContext.lineTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), self.config.height);
+			}
+
+		}
+
+		// draw horizontal lines
+		for(var i = 0; i < self.grid.units; i++){
+
+			if(i > 0){
+				self.graphContext.moveTo(0, Math.round(i * self.grid.unitHeight));
+				self.graphContext.lineTo(self.config.width, Math.round(i * self.grid.unitHeight));
+			}
+
+		}
+
+		self.graphContext.stroke();
+
+	}
+
 	Plot.prototype.drawRange = function(elem, from, to){
 		var self = this,
 			position = {
@@ -265,8 +311,8 @@
 		self.range.from.px = Math.round(position.left);
 		self.range.to.px = Math.round(position.width) + self.range.from.px;
 
-		self.range.from.index = Math.round(self.range.from.px / self.range.unitWidth);
-		self.range.to.index = Math.round((self.range.to.px / self.range.unitWidth) - 1);
+		self.range.from.index = Math.round(self.range.from.px / self.grid.unitWidth);
+		self.range.to.index = Math.round((self.range.to.px / self.grid.unitWidth) - 1);
 
 		self.range.from.data = self.data[self.range.from.index];
 		self.range.to.data = self.data[self.range.to.index];
@@ -356,8 +402,8 @@
 					self.$el.removeData("range");
 				}
 
-				self.range.from.px = Math.round(fromIndex * self.range.unitWidth);
-				self.range.to.px = Math.round(toIndex * self.range.unitWidth);
+				self.range.from.px = Math.round(fromIndex * self.grid.unitWidth);
+				self.range.to.px = Math.round(toIndex * self.grid.unitWidth);
 
 				self.range.from.index = fromIndex;
 				self.range.to.index = toIndex;
