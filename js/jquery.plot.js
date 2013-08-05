@@ -356,14 +356,14 @@
 					self.$el.removeData("range");
 				}
 
-				self.range.from.px = Math.round(fromIndex * self.range.unitWidth) || 0;
-				self.range.to.px = Math.round(toIndex * self.range.unitWidth) || 0;
+				self.range.from.px = Math.round(fromIndex * self.range.unitWidth);
+				self.range.to.px = Math.round(toIndex * self.range.unitWidth);
 
-				self.range.from.index = fromIndex || 0;
-				self.range.to.index = toIndex || 0;
+				self.range.from.index = fromIndex;
+				self.range.to.index = toIndex;
 
-				self.range.from.data = self.data[fromIndex] || null;
-				self.range.to.data = self.data[toIndex] || null;
+				self.range.from.data = self.data[fromIndex];
+				self.range.to.data = self.data[toIndex];
 
 				self.drawRange(self.$rangeCanvas, self.range.from.px, self.range.to.px);
 			}
@@ -390,25 +390,31 @@
 
 	Plot.prototype.rangeEvents = function(){
 		var self = this,
-			rect = {
-				from: self.range.from.px,
-				to: self.range.to.px,
-				width: self.range.to.px - self.range.from.px,
-				handles: self.range.handles
-			},
 			selecting = false,
 			resizable = false,
 			resizing = false,
 			movable = false,
-			moving = false;
+			moving = false,
+			rect = {},
+			defineRect = function(){
+				// define rect object based on current range
+				rect = {
+					from: self.range.from.px,
+					to: self.range.to.px,
+					width: self.range.to.px - self.range.from.px,
+					handles: self.range.handles
+				}
+			};
 
-		// remove all existing mousemove events to prevent duplicate event firign
+		defineRect();
+
+		// remove all existing mouse events to prevent duplicate event firing
 		self.$el.unbind("mousemove");
 		self.$rangeCanvas.unbind("mousedown");
 		self.$rangeCanvas.unbind("mousemove");
 		self.$rangeCanvas.unbind("mouseup");
 
-		// get cursor location, determine if a resize event is applicable
+		// get cursor location, determine if a resize or move event is applicable
 		self.$el.mousemove(function(e){
 			rect.x = e.offsetX;
 			rect.y = e.offsetY;
@@ -417,18 +423,21 @@
 				if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
 					if(rect.x < rect.handles.left[1]){
 
+						// left range handle is hovered, range is resizable
 						resizable = "left";
 						movable = false;
 						self.$rangeCanvas.css("cursor", "ew-resize");
 
 					}else if(rect.x > rect.handles.right[0]){
 
+						// right range handle is hovered, range is resizable
 						resizable = "right";
 						movable = false;
 						self.$rangeCanvas.css("cursor", "ew-resize");
 
 					}else{
 
+						// range area is hovered, range is movable
 						resizable = false;
 						movable = true;
 						self.$rangeCanvas.css("cursor", "all-scroll");
@@ -436,6 +445,7 @@
 					}
 				}else{
 
+					// range is not resizable or movable
 					resizable = false;
 					movable = false;
 					self.$rangeCanvas.css({cursor: "default"});
@@ -446,13 +456,19 @@
 
 		// when selecting the range container, draw a box and send the range to the callback
 		self.$rangeCanvas.mousedown(function(e){
+
+			// prevent default action for click, including display of text selection mouse cursor
 			e.originalEvent.preventDefault();
-			rect.width = self.range.to.px - self.range.from.px;
+
+			// reset rect object based on current range
+			defineRect();
+
+			// add click location to rect object for move actions
 			rect.click = {
 				pos: e.offsetX,
 				from: rect.from,
 				to: rect.to
-			};
+			}
 
 			if(resizable){
 
