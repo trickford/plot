@@ -26,9 +26,12 @@
 					}
 				},
 				grid: {
-					draw: true,
+					show: true,
 					interval: 10,
 					color: "#F0F0F0"
+				},
+				labels: {
+					show: true
 				},
 				classes: {
 					graph: "plot",
@@ -41,7 +44,8 @@
 		self.$el = $(elem);
 		self.callback = callback;
 		self.range = self.$el.data("range");
-		self.grid = {};
+		self.grid = {},
+		self.canvas = {};
 
 		self.defineElements();
 
@@ -96,24 +100,24 @@
 				top: 0,
 				left: 0,
 				height: self.config.height,
-				width: self.config.width
+				width: self.canvas.width
 			}
 
 		// create canvas and set dimensions
 		canvas.attr({
 			height: self.config.height,
-			width: self.config.width
+			width: self.canvas.width
 		}).css(css).appendTo(self.$el);
 
 		// create range container and set dimensions and positioning
 		rangeCanvas.attr({
 			height: self.config.height,
-			width: self.config.width
+			width: self.canvas.width
 		}).css(css).appendTo(self.$el);
 
 		// set dimensions of parent container
 		self.$el.css({
-			width: self.config.width,
+			width: self.canvas.width,
 			height: self.config.height,
 			position: "relative"
 		});
@@ -128,14 +132,18 @@
 		var self = this;
 
 		self.graphContext = self.$canvas[0].getContext("2d");
-		self.graphContext.clearRect(0,0,self.config.width,self.config.height);
+		self.graphContext.clearRect(0,0,self.canvas.width,self.config.height);
 	}
 
 	Plot.prototype.clearRange = function(){
 		var self = this;
 
 		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
-		self.rangeContext.clearRect(0,0,self.config.width,self.config.height);
+		self.rangeContext.clearRect(0,0,self.canvas.width,self.config.height);
+	}
+
+	Plot.prototype.calculateLabels = function(){
+
 	}
 
 	Plot.prototype.drawBarGraph = function(){
@@ -151,14 +159,14 @@
 		}
 
 		// set chart measurement units
-		unitWidth = self.config.width / self.data.length;
+		unitWidth = self.canvas.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
 		self.grid.units = heightUnits + 1;
 		
-		if(self.config.grid.draw){
+		if(self.config.grid.show){
 			self.drawGrid();
 		}
 
@@ -206,14 +214,14 @@
 		}
 
 		// set chart measurement units
-		unitWidth = self.config.width / self.data.length;
+		unitWidth = self.canvas.width / self.data.length;
 		unitHeight = (self.config.height / (heightUnits + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
 		self.grid.units = heightUnits + 1;
 
-		if(self.config.grid.draw){
+		if(self.config.grid.show){
 			self.drawGrid();
 		}
 		
@@ -275,7 +283,7 @@
 
 			if(i > 0){
 				self.graphContext.moveTo(0, Math.round(i * self.grid.unitHeight));
-				self.graphContext.lineTo(self.config.width, Math.round(i * self.grid.unitHeight));
+				self.graphContext.lineTo(self.canvas.width, Math.round(i * self.grid.unitHeight));
 			}
 
 		}
@@ -557,7 +565,7 @@
 					rect.delta = rect.click.pos - rect.x;
 
 					// if new position is within canvas, redraw range, else set range to appropriate edge
-					if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.config.width){
+					if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.canvas.width){
 
 						rect.from = rect.click.from - rect.delta;
 						rect.to = rect.click.to - rect.delta;
@@ -573,10 +581,10 @@
 						}
 
 						// if range ends after right edge, push range to right edge
-						if((rect.click.to - rect.delta) >= self.config.width){
+						if((rect.click.to - rect.delta) >= self.canvas.width){
 
 							rect.from = rect.to - rect.width;
-							rect.to = self.config.width;
+							rect.to = self.canvas.width;
 
 						}
 					}
