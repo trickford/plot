@@ -45,7 +45,10 @@
 		self.callback = callback;
 		self.range = self.$el.data("range");
 		self.grid = {},
-		self.canvas = {};
+		self.canvas = {
+			width: self.config.width,
+			height: self.config.height
+		};
 
 		self.defineElements();
 
@@ -99,26 +102,26 @@
 				position: "absolute",
 				top: 0,
 				left: 0,
-				height: self.config.height,
+				height: self.canvas.height,
 				width: self.canvas.width
 			}
 
 		// create canvas and set dimensions
 		canvas.attr({
-			height: self.config.height,
+			height: self.canvas.height,
 			width: self.canvas.width
 		}).css(css).appendTo(self.$el);
 
 		// create range container and set dimensions and positioning
 		rangeCanvas.attr({
-			height: self.config.height,
+			height: self.canvas.height,
 			width: self.canvas.width
 		}).css(css).appendTo(self.$el);
 
 		// set dimensions of parent container
 		self.$el.css({
 			width: self.canvas.width,
-			height: self.config.height,
+			height: self.canvas.height,
 			position: "relative"
 		});
 
@@ -132,14 +135,14 @@
 		var self = this;
 
 		self.graphContext = self.$canvas[0].getContext("2d");
-		self.graphContext.clearRect(0,0,self.canvas.width,self.config.height);
+		self.graphContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 	}
 
 	Plot.prototype.clearRange = function(){
 		var self = this;
 
 		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
-		self.rangeContext.clearRect(0,0,self.canvas.width,self.config.height);
+		self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 	}
 
 	Plot.prototype.calculateLabels = function(){
@@ -160,7 +163,7 @@
 
 		// set chart measurement units
 		unitWidth = self.canvas.width / self.data.length;
-		unitHeight = (self.config.height / (heightUnits + 1));
+		unitHeight = (self.canvas.height / (heightUnits + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
@@ -189,7 +192,7 @@
 			if(dataPoint > 0){
 				self.graphContext.fillRect(
 					position.left,
-					self.config.height - position.height,
+					self.canvas.height - position.height,
 					position.width,
 					position.height
 				);
@@ -215,7 +218,7 @@
 
 		// set chart measurement units
 		unitWidth = self.canvas.width / self.data.length;
-		unitHeight = (self.config.height / (heightUnits + 1));
+		unitHeight = (self.canvas.height / (heightUnits + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
@@ -236,11 +239,11 @@
 			}
 
 			var position = {
-					top: self.config.height - (dataPoint * unitHeight),
+					top: self.canvas.height - (dataPoint * unitHeight),
 					left: Math.round(unitWidth * i)
 				},
 				nextPosition = {
-					top: self.config.height - (nextPoint * unitHeight),
+					top: self.canvas.height - (nextPoint * unitHeight),
 					left: Math.round(unitWidth * (i + 1))
 				}
 			self.graphContext.strokeStyle = self.config.lineStyle.lineColor;
@@ -273,7 +276,7 @@
 
 			if(i > 0){
 				self.graphContext.moveTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), 0);
-				self.graphContext.lineTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), self.config.height);
+				self.graphContext.lineTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), self.canvas.height);
 			}
 
 		}
