@@ -44,10 +44,21 @@
 						yaxis: "count"
 					}
 				},
+				info: {
+					show: true,
+					backgroundColor: "#EFEFEF",
+					border: "#CCCCCC",
+					size: 10,
+					labels: {
+						x: "Time",
+						y: "TPM"
+					}
+				},
 				classes: {
 					graph: "graph",
 					range: "range",
-					label: "label"
+					label: "label",
+					info: "info"
 				}
 			};
 
@@ -115,30 +126,17 @@
 		self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
 		self.$labelLeft = self.$el.find("div." + self.config.classes.label + "-left");
 		self.$labelBottom = self.$el.find("div." + self.config.classes.label + "-bottom");
+		self.$info = self.$el.find("div." + self.config.classes.info);
 	}
 
 	Plot.prototype.createLabels = function(){
 		var self = this;
 
-		var leftMin, leftMax, bottomMin, bottomMax,
-			convertTime = function(timestamp){
-				var date, hours, minutes, formattedTime;
-
-				// create a new javascript Date object based on the timestamp
-				// multiplied by 10000 so that the argument is in milliseconds, not seconds
-				date = new Date(timestamp*10000);
-
-				hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours();
-				minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes();
-				// will display time in 10:30 format
-				formattedTime = hours + ':' + minutes;
-
-				return formattedTime;
-			};
+		var leftMin, leftMax, bottomMin, bottomMax;
 			
 		if(self.config.labels.type.xaxis === "time"){
-			bottomMin = convertTime(self.data[0][0]);
-			bottomMax = convertTime(self.data[self.data.length - 1][0]);
+			bottomMin = self.convertTime(self.data[0][0]);
+			bottomMax = self.convertTime(self.data[self.data.length - 1][0]);
 		}else{
 			bottomMin = self.data[0][0];
 			bottomMax = self.data[self.data.length - 1][0];
@@ -193,6 +191,7 @@
 			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
 			labelLeft = $("<div>").addClass(self.config.classes.label + "-left"),
 			labelBottom = $("<div>").addClass(self.config.classes.label + "-bottom"),
+			info = $("<div>").addClass(self.config.classes.info),
 			css = {
 				left: {
 					position: "absolute",
@@ -207,6 +206,17 @@
 					right: 0,
 					height: self.config.labels.size.bottom,
 					width: self.config.width - self.config.labels.size.left
+				},
+				info: {
+					position: "absolute",
+					top: 0,
+					right: 0,
+					"font-size": self.config.info.size,
+					background: self.config.info.backgroundColor,
+					border: "1px solid " + self.config.info.border,
+					opacity: 0.7,
+					padding: 10,
+					display: "none"
 				}
 			};
 
@@ -234,6 +244,10 @@
 				height: css.bottom.height,
 				width: css.bottom.width
 			}).css(css.bottom).appendTo(self.$el);
+		}
+
+		if(self.config.info.show){
+			info.css(css.info).appendTo(self.$el);
 		}
 
 		// set dimensions of parent container
@@ -514,6 +528,27 @@
 		}
 	}
 
+	Plot.prototype.updateInfoBox = function(rect){
+		var self = this,
+			info, pos;
+
+		point = {
+			x: self.data[Math.round(rect.x / self.grid.unitWidth) - 1][0],
+			y: self.data[Math.round(rect.x / self.grid.unitWidth) - 1][1],
+			i: Math.round(rect.x / self.grid.unitWidth) - 1
+		}
+		
+		info = self.config.info.labels.x + ": " + self.convertTime(point.x) + ", " + self.config.info.labels.y + ": " + point.y;
+		
+		self.$info.html(info).show();
+	}
+
+	Plot.prototype.hideInfoBox = function(){
+		var self = this;
+
+		self.$info.hide();
+	}
+
 	Plot.prototype.updateRange = function(){
 		var self = this,
 			fromIndex = 0,
@@ -571,6 +606,21 @@
 
 	}
 
+	Plot.prototype.convertTime = function(timestamp){
+		var date, hours, minutes, formattedTime;
+
+		// create a new javascript Date object based on the timestamp
+		// multiplied by 10000 so that the argument is in milliseconds, not seconds
+		date = new Date(timestamp*10000);
+
+		hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours();
+		minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes();
+		// will display time in 10:30 format
+		formattedTime = hours + ':' + minutes;
+
+		return formattedTime;
+	}
+
 	Plot.prototype.rangeEvents = function(){
 		var self = this,
 			selecting = false,
@@ -593,6 +643,7 @@
 
 		// remove all existing mouse events to prevent duplicate event firing
 		self.$el.unbind("mousemove");
+		self.$el.unbind("mouseout");
 		self.$rangeCanvas.unbind("mousedown");
 		self.$rangeCanvas.unbind("mousemove");
 		self.$rangeCanvas.unbind("mouseup");
@@ -601,6 +652,8 @@
 		self.$el.mousemove(function(e){
 			rect.x = e.offsetX;
 			rect.y = e.offsetY;
+
+			self.updateInfoBox(rect);
 
 			if(!selecting && !moving && !resizing){
 				if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
@@ -635,6 +688,8 @@
 
 				}
 			}
+		}).mouseout(function(){
+			self.hideInfoBox();
 		})
 
 		// when selecting the range container, draw a box and send the range to the callback
