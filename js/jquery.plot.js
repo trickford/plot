@@ -4,61 +4,50 @@
 
 		var self = this,
 			defaults = {
-				width: 540, // width of canvas
-				height: 300, // height of canvas
-				style: "bar",
-				border: "#CCCCCC",
-				barStyle: {
-					hPadding: 2, // padding around
-					barColor: "#FF9900"
+				"width": 540, // width of canvas
+				"height": 300, // height of canvas
+				"type": "bar", // "bar" or "line"
+				"range": {
+					"show": true, // show range selection
 				},
-				lineStyle: {
-					lineColor: "#FF9900"
+				"grid": {
+					"show": true, // show grid
+					"interval": 10 // how many points between grid lines
 				},
-				rangeStyle: {
-					color: "#E5E5E5",
-					opacity: 0.5,
-					handles: {
-						draw: true,
-						image: false,
-						width: 10,
-						height: 40,
-						color: "#868695"
-					}
+				"labels": {
+					"show": true, // show labels
+					"xaxis": "time", // x-axis label
+					"yaxis": "count" // y-axis label
 				},
-				grid: {
-					show: true,
-					interval: 10,
-					color: "#F0F0F0"
+				"info": {
+					"show": true, // show info overlay
+					"xaxis": "Time", // x-axis info description
+					"yaxis": "TPM" // y-axis into description
 				},
-				labels: {
-					show: true,
-					style: "limits", // "limits" or "incremental"
-					size: {
-						text: 16,
-						left: 40,
-						bottom: 30
-					},
-					type: {
-						xaxis: "time",
-						yaxis: "count"
-					}
+				"classes": {
+					"graph": "graph", // class for graph canvas
+					"range": "range", // class for range canvas
+					"label": "label", // class for label divs
+					"info": "info" // class for info div
 				},
-				info: {
-					show: true,
-					backgroundColor: "#EFEFEF",
-					border: "#CCCCCC",
-					size: 10,
-					labels: {
-						x: "Time",
-						y: "TPM"
-					}
-				},
-				classes: {
-					graph: "graph",
-					range: "range",
-					label: "label",
-					info: "info"
+				"style": {
+					"border": "#CCCCCC", // border around canvas
+					"barColor": "#FF9900", // color of bars in bar graph
+					"barPadding": 2, // padding between bars in bar graph
+					"lineColor": "#FF9900", // color of line in line graph
+					"rangeColor": "#E5E5E5", // color of range selection
+					"rangeOpacity": 0.5, // opacity of range in range selection
+					"handleColor": "#868695", // color of range handles
+					"handleImage": null, // image to display for range handles (URI)
+					"handleWidth": 10, // width of range handles if no image set
+					"handleHeight": 40, // height of range handles if no image set
+					"gridColor": "#F0F0F0", // color or grid lines
+					"labelTextSize": 14, // size of label text
+					"labelLeftWidth": 30, // width of vertical label div
+					"labelBottomHeight": 30, // height of horizontal label div
+					"infoColor": "#EFEFEF", // background color of info box
+					"infoBorder": "#CCCCCC", // border color of info box
+					"infoTextSize": 10 // text size for info box
 				}
 			};
 
@@ -70,11 +59,11 @@
 		self.grid = {},
 		self.canvas = {
 			position: "absolute",
-			width: (self.config.labels.show) ? self.config.width - self.config.labels.size.left - 2 : self.config.width - 2,
-			height: (self.config.labels.show) ? self.config.height - self.config.labels.size.bottom - 2 : self.config.height - 2,
-			left: (self.config.labels.show) ? self.config.labels.size.left : 0,
+			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - 2 : self.config.width - 2,
+			height: (self.config.labels.show) ? self.config.height - self.config.style.labelBottomHeight - 2 : self.config.height - 2,
+			left: (self.config.labels.show) ? self.config.style.labelLeftWidth : 0,
 			top: 0,
-			border: "solid 1px " + self.config.border
+			border: "solid 1px " + self.config.style.border
 		};
 
 		self.defineElements();
@@ -99,15 +88,15 @@
 			}
 		}
 
-		if(self.config.rangeStyle.handles.image){
+		if(self.config.style.handleImage){
 			self.loadRangeImage();
 		}
 
 		self.rangeEvents();
 
-		if(self.config.style === "bar"){
+		if(self.config.type === "bar"){
 			self.drawBarGraph();
-		}else if(self.config.style === "line"){
+		}else if(self.config.type === "line"){
 			self.drawLineGraph();
 		}
 
@@ -134,7 +123,7 @@
 
 		var leftMin, leftMax, bottomMin, bottomMax;
 			
-		if(self.config.labels.type.xaxis === "time"){
+		if(self.config.labels.xaxis === "time"){
 			bottomMin = self.convertTime(self.data[0][0]);
 			bottomMax = self.convertTime(self.data[self.data.length - 1][0]);
 		}else{
@@ -142,38 +131,36 @@
 			bottomMax = self.data[self.data.length - 1][0];
 		}
 
-		if(self.config.labels.style === "limits"){
-			// create left labels
-			$("<span>").addClass(self.config.classes.label).css({
-				position: "absolute",
-				top: 0,
-				right: 2,
-				"font-size": self.config.labels.size.text
-			}).appendTo(self.$labelLeft).html(self.grid.units.max);
+		// create left labels
+		$("<span>").addClass(self.config.classes.label).css({
+			position: "absolute",
+			top: 0,
+			right: 2,
+			"font-size": self.config.style.labelTextSize
+		}).appendTo(self.$labelLeft).html(self.grid.units.max);
 
-			$("<span>").addClass(self.config.classes.label).css({
-				position: "absolute",
-				bottom: 0,
-				right: 2,
-				"font-size": self.config.labels.size.text
-			}).appendTo(self.$labelLeft).html(self.grid.units.min);
+		$("<span>").addClass(self.config.classes.label).css({
+			position: "absolute",
+			bottom: 0,
+			right: 2,
+			"font-size": self.config.style.labelTextSize
+		}).appendTo(self.$labelLeft).html(self.grid.units.min);
 
-			// create bottom labels
-			$("<span>").addClass(self.config.classes.label).css({
-				position: "absolute",
-				top: 2,
-				left: 0,
-				"font-size": self.config.labels.size.text
-			}).appendTo(self.$labelBottom).html(bottomMin);
+		// create bottom labels
+		$("<span>").addClass(self.config.classes.label).css({
+			position: "absolute",
+			top: 2,
+			left: 0,
+			"font-size": self.config.style.labelTextSize
+		}).appendTo(self.$labelBottom).html(bottomMin);
 
-			$("<span>").addClass(self.config.classes.label).css({
-				position: "absolute",
-				top: 2,
-				right: 0,
-				"font-size": self.config.labels.size.text
-			}).appendTo(self.$labelBottom).html(bottomMax);
+		$("<span>").addClass(self.config.classes.label).css({
+			position: "absolute",
+			top: 2,
+			right: 0,
+			"font-size": self.config.style.labelTextSize
+		}).appendTo(self.$labelBottom).html(bottomMax);
 
-		}
 	}
 
 	Plot.prototype.clearLabels = function(){
@@ -197,23 +184,23 @@
 					position: "absolute",
 					top: 0,
 					left: 0,
-					height: self.config.height - self.config.labels.size.bottom,
-					width: self.config.labels.size.left
+					height: self.config.height - self.config.style.labelBottomHeight,
+					width: self.config.style.labelLeftWidth
 				},
 				bottom: {
 					position: "absolute",
 					bottom: 0,
 					right: 0,
-					height: self.config.labels.size.bottom,
-					width: self.config.width - self.config.labels.size.left
+					height: self.config.style.labelBottomHeight,
+					width: self.config.width - self.config.style.labelLeftWidth
 				},
 				info: {
 					position: "absolute",
 					top: 0,
 					right: 0,
-					"font-size": self.config.info.size,
-					background: self.config.info.backgroundColor,
-					border: "1px solid " + self.config.info.border,
+					"font-size": self.config.style.infoTextSize,
+					background: self.config.style.infoColor,
+					border: "1px solid " + self.config.style.infoBorder,
 					opacity: 0.7,
 					padding: 10,
 					display: "none"
@@ -317,11 +304,11 @@
 
 			var position = {
 					height: dataPoint * unitHeight,
-					width: Math.round(unitWidth - self.config.barStyle.hPadding),
+					width: Math.round(unitWidth - self.config.style.barPadding),
 					left: Math.round(unitWidth * i)
 				}
 
-			self.graphContext.fillStyle = self.config.barStyle.barColor;
+			self.graphContext.fillStyle = self.config.style.barColor;
 
 			if(dataPoint > 0){
 				self.graphContext.fillRect(
@@ -386,7 +373,7 @@
 					top: self.canvas.height - (nextPoint * unitHeight),
 					left: Math.round(unitWidth * (i + 1))
 				}
-			self.graphContext.strokeStyle = self.config.lineStyle.lineColor;
+			self.graphContext.strokeStyle = self.config.style.lineColor;
 
 			if(i == 0){
 				self.graphContext.moveTo(position.left, position.top);
@@ -409,7 +396,7 @@
 		var self = this;
 
 		self.graphContext.beginPath();
-		self.graphContext.strokeStyle = self.config.grid.color;
+		self.graphContext.strokeStyle = self.config.style.gridColor;
 
 		// draw vertical lines
 		for(var i = 0; i < (self.data.length / self.config.grid.interval); i++){
@@ -448,8 +435,8 @@
 		self.clearRange();
 
 		// draw rectangle
-		self.rangeContext.fillStyle = self.config.rangeStyle.color;
-		self.rangeContext.globalAlpha = self.config.rangeStyle.opacity;
+		self.rangeContext.fillStyle = self.config.style.rangeColor;
+		self.rangeContext.globalAlpha = self.config.style.rangeOpacity;
 
 		self.rangeContext.fillRect(
 			position.left,
@@ -469,61 +456,59 @@
 		self.range.to.data = self.data[self.range.to.index];
 
 		// draw handles
-		if(self.config.rangeStyle.handles.draw){
-			self.rangeContext.globalAlpha = 1;
+		self.rangeContext.globalAlpha = 1;
 
-			if(self.config.rangeStyle.handles.image){
+		if(self.config.style.handleImage){
 
-				if(position.width > self.range.handles.image.width * 2){
-					self.range.handles.width = self.range.handles.image.width;
-					self.range.handles.show = true;
+			if(position.width > self.range.handles.image.width * 2){
+				self.range.handles.width = self.range.handles.image.width;
+				self.range.handles.show = true;
 
-					// place left handle
-					self.rangeContext.drawImage(
-						self.range.handles.image,
-						self.range.from.px - Math.round(self.range.handles.image.width / 2),
-						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-					);
-					self.range.handles.left = [(self.range.from.px - Math.round(self.range.handles.image.width / 2)),(self.range.from.px + Math.round(self.range.handles.image.width / 2))];
+				// place left handle
+				self.rangeContext.drawImage(
+					self.range.handles.image,
+					self.range.from.px - Math.round(self.range.handles.image.width / 2),
+					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
+				);
+				self.range.handles.left = [(self.range.from.px - Math.round(self.range.handles.image.width / 2)),(self.range.from.px + Math.round(self.range.handles.image.width / 2))];
 
-					// place right handle
-					self.rangeContext.drawImage(
-						self.range.handles.image,
-						self.range.to.px - Math.round(self.range.handles.image.width / 2),
-						(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-					);
-					self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
-				}else{
-					self.range.handles.show = true;
-				}
+				// place right handle
+				self.rangeContext.drawImage(
+					self.range.handles.image,
+					self.range.to.px - Math.round(self.range.handles.image.width / 2),
+					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
+				);
+				self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
 			}else{
-				if(position.width > self.config.rangeStyle.handles.width * 2){
-					self.range.handles.width = self.config.rangeStyle.handles.width;
-					self.range.handles.show = true;
+				self.range.handles.show = true;
+			}
+		}else{
+			if(position.width > self.config.style.handleWidth * 2){
+				self.range.handles.width = self.config.style.handleWidth;
+				self.range.handles.show = true;
 
-					self.rangeContext.fillStyle = self.config.rangeStyle.handles.color;
+				self.rangeContext.fillStyle = self.config.style.handleColor;
 
-					// place left handle
-					self.rangeContext.fillRect(
-						self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2),
-						(position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
-						self.config.rangeStyle.handles.width,
-						self.config.rangeStyle.handles.height
-					);
-					self.range.handles.left = [(self.range.from.px - Math.round(self.config.rangeStyle.handles.width / 2)),(self.range.from.px + Math.round(self.config.rangeStyle.handles.width / 2))];
+				// place left handle
+				self.rangeContext.fillRect(
+					self.range.from.px - Math.round(self.config.style.handleWidth / 2),
+					(position.height / 2) - Math.round(self.config.style.handleHeight / 2),
+					self.config.style.handleWidth,
+					self.config.style.handleHeight
+				);
+				self.range.handles.left = [(self.range.from.px - Math.round(self.config.style.handleWidth / 2)),(self.range.from.px + Math.round(self.config.style.handleWidth / 2))];
 
-					// place right handle
-					self.rangeContext.fillRect(
-						self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2),
-						(position.height / 2) - Math.round(self.config.rangeStyle.handles.height / 2),
-						self.config.rangeStyle.handles.width,
-						self.config.rangeStyle.handles.height
-					);
-					self.range.handles.right = [(self.range.to.px - Math.round(self.config.rangeStyle.handles.width / 2)),(self.range.to.px + Math.round(self.config.rangeStyle.handles.width / 2))];
-					
-				}else{
-					self.range.handles.show = false;
-				}
+				// place right handle
+				self.rangeContext.fillRect(
+					self.range.to.px - Math.round(self.config.style.handleWidth / 2),
+					(position.height / 2) - Math.round(self.config.style.handleHeight / 2),
+					self.config.style.handleWidth,
+					self.config.style.handleHeight
+				);
+				self.range.handles.right = [(self.range.to.px - Math.round(self.config.style.handleWidth / 2)),(self.range.to.px + Math.round(self.config.style.handleWidth / 2))];
+				
+			}else{
+				self.range.handles.show = false;
 			}
 		}
 	}
@@ -537,8 +522,8 @@
 			y: self.data[Math.round(rect.x / self.grid.unitWidth) - 1][1],
 			i: Math.round(rect.x / self.grid.unitWidth) - 1
 		}
-		
-		info = self.config.info.labels.x + ": " + self.convertTime(point.x) + ", " + self.config.info.labels.y + ": " + point.y;
+
+		info = self.config.info.xaxis + ": " + self.convertTime(point.x) + ", " + self.config.info.yaxis + ": " + point.y;
 		
 		self.$info.html(info).show();
 	}
@@ -602,7 +587,7 @@
 		var self = this;
 
 		self.range.handles.image = new Image();
-		self.range.handles.image.src = self.config.rangeStyle.handles.image;
+		self.range.handles.image.src = self.config.style.handleImage;
 
 	}
 
