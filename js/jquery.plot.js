@@ -51,7 +51,7 @@
 				}
 			};
 
-		self.config = $.extend({}, defaults, config);
+		self.config = $.extend(true, {}, defaults, config);
 		self.data = data;
 		self.$el = $(elem);
 		self.callback = callback;
