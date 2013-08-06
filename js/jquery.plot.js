@@ -7,6 +7,7 @@
 				width: 540, // width of canvas
 				height: 300, // height of canvas
 				style: "bar",
+				border: "#CCCCCC",
 				barStyle: {
 					hPadding: 2, // padding around
 					barColor: "#FF9900"
@@ -31,11 +32,22 @@
 					color: "#F0F0F0"
 				},
 				labels: {
-					show: true
+					show: true,
+					style: "limits", // "limits" or "incremental"
+					size: {
+						text: 16,
+						left: 40,
+						bottom: 30
+					},
+					type: {
+						xaxis: "time",
+						yaxis: "count"
+					}
 				},
 				classes: {
-					graph: "plot",
-					range: "range"
+					graph: "graph",
+					range: "range",
+					label: "label"
 				}
 			};
 
@@ -46,16 +58,23 @@
 		self.range = self.$el.data("range");
 		self.grid = {},
 		self.canvas = {
-			width: self.config.width,
-			height: self.config.height
+			position: "absolute",
+			width: (self.config.labels.show) ? self.config.width - self.config.labels.size.left - 2 : self.config.width - 2,
+			height: (self.config.labels.show) ? self.config.height - self.config.labels.size.bottom - 2 : self.config.height - 2,
+			left: (self.config.labels.show) ? self.config.labels.size.left : 0,
+			top: 0,
+			border: "solid 1px " + self.config.border
 		};
 
 		self.defineElements();
 
 		if(self.$canvas.length){
 			self.clearGraph();
+			if(self.config.labels.show){
+				self.clearLabels();
+			}
 		}else{
-			self.createCanvas();
+			self.createElements();
 		}
 
 		if(typeof self.range === "undefined"){
@@ -81,6 +100,10 @@
 			self.drawLineGraph();
 		}
 
+		if(self.config.labels.show){
+			self.createLabels();
+		}
+
 		return this;
 
 	}
@@ -90,38 +113,133 @@
 
 		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
 		self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
+		self.$labelLeft = self.$el.find("div." + self.config.classes.label + "-left");
+		self.$labelBottom = self.$el.find("div." + self.config.classes.label + "-bottom");
 	}
 
-	Plot.prototype.createCanvas = function(){
+	Plot.prototype.createLabels = function(){
+		var self = this;
+
+		var leftMin, leftMax, bottomMin, bottomMax,
+			convertTime = function(timestamp){
+				var date, hours, minutes, formattedTime;
+
+				// create a new javascript Date object based on the timestamp
+				// multiplied by 10000 so that the argument is in milliseconds, not seconds
+				date = new Date(timestamp*10000);
+
+				hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours();
+				minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes();
+				// will display time in 10:30 format
+				formattedTime = hours + ':' + minutes;
+
+				return formattedTime;
+			};
+			
+		if(self.config.labels.type.xaxis === "time"){
+			bottomMin = convertTime(self.data[0][0]);
+			bottomMax = convertTime(self.data[self.data.length - 1][0]);
+		}else{
+			bottomMin = self.data[0][0];
+			bottomMax = self.data[self.data.length - 1][0];
+		}
+
+		if(self.config.labels.style === "limits"){
+			// create left labels
+			$("<span>").addClass(self.config.classes.label).css({
+				position: "absolute",
+				top: 0,
+				right: 2,
+				"font-size": self.config.labels.size.text
+			}).appendTo(self.$labelLeft).html(self.grid.units.max);
+
+			$("<span>").addClass(self.config.classes.label).css({
+				position: "absolute",
+				bottom: 0,
+				right: 2,
+				"font-size": self.config.labels.size.text
+			}).appendTo(self.$labelLeft).html(self.grid.units.min);
+
+			// create bottom labels
+			$("<span>").addClass(self.config.classes.label).css({
+				position: "absolute",
+				top: 2,
+				left: 0,
+				"font-size": self.config.labels.size.text
+			}).appendTo(self.$labelBottom).html(bottomMin);
+
+			$("<span>").addClass(self.config.classes.label).css({
+				position: "absolute",
+				top: 2,
+				right: 0,
+				"font-size": self.config.labels.size.text
+			}).appendTo(self.$labelBottom).html(bottomMax);
+
+		}
+	}
+
+	Plot.prototype.clearLabels = function(){
+		var self = this;
+
+		self.$labelLeft.html("");
+		self.$labelBottom.html("");
+	}
+
+	Plot.prototype.createElements = function(){
 		var self = this;
 
 		// create canvas element and range selector divs
 		var canvas = $("<canvas>").addClass(self.config.classes.graph),
 			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
+			labelLeft = $("<div>").addClass(self.config.classes.label + "-left"),
+			labelBottom = $("<div>").addClass(self.config.classes.label + "-bottom"),
 			css = {
-				position: "absolute",
-				top: 0,
-				left: 0,
-				height: self.canvas.height,
-				width: self.canvas.width
-			}
+				left: {
+					position: "absolute",
+					top: 0,
+					left: 0,
+					height: self.config.height - self.config.labels.size.bottom,
+					width: self.config.labels.size.left
+				},
+				bottom: {
+					position: "absolute",
+					bottom: 0,
+					right: 0,
+					height: self.config.labels.size.bottom,
+					width: self.config.width - self.config.labels.size.left
+				}
+			};
 
 		// create canvas and set dimensions
 		canvas.attr({
 			height: self.canvas.height,
 			width: self.canvas.width
-		}).css(css).appendTo(self.$el);
+		}).css(self.canvas).appendTo(self.$el);
 
 		// create range container and set dimensions and positioning
 		rangeCanvas.attr({
 			height: self.canvas.height,
 			width: self.canvas.width
-		}).css(css).appendTo(self.$el);
+		}).css(self.canvas).appendTo(self.$el);
+
+		if(self.config.labels.show){
+			// create left side label container and set dimensions and positioning
+			labelLeft.attr({
+				height: css.left.height,
+				width: css.left.width
+			}).css(css.left).appendTo(self.$el);
+
+			// create bottom side label container and set dimensions and positioning
+			labelBottom.attr({
+				height: css.bottom.height,
+				width: css.bottom.width
+			}).css(css.bottom).appendTo(self.$el);
+		}
 
 		// set dimensions of parent container
 		self.$el.css({
-			width: self.canvas.width,
-			height: self.canvas.height,
+			width: self.config.width,
+			height: self.config.height,
 			position: "relative"
 		});
 
@@ -145,29 +263,31 @@
 		self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 	}
 
-	Plot.prototype.calculateLabels = function(){
-
-	}
-
 	Plot.prototype.drawBarGraph = function(){
 		var self = this,
-			heightUnits = 0,
-			unitWidth, unitHeight;
+			maxUnits, minUnits, unitWidth, unitHeight;
 
-		// get data max
+		// get data min/max
 		for(var i = 0; i < self.data.length; i++){
-			if(self.data[i][1] > heightUnits){
-				heightUnits = self.data[i][1];
+			if(self.data[i][1] > maxUnits || typeof maxUnits === "undefined"){
+				maxUnits = self.data[i][1];
+			}
+			if(self.data[i][1] < minUnits || typeof minUnits === "undefined"){
+				minUnits = self.data[i][1];
 			}
 		}
 
 		// set chart measurement units
 		unitWidth = self.canvas.width / self.data.length;
-		unitHeight = (self.canvas.height / (heightUnits + 1));
+		unitHeight = self.canvas.height / ((Math.abs(maxUnits) + Math.abs(minUnits) + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
-		self.grid.units = heightUnits + 1;
+		self.grid.units = {
+			max: maxUnits + 1,
+			min: minUnits,
+			total: ((Math.abs(maxUnits) + Math.abs(minUnits) + 1))
+		}
 		
 		if(self.config.grid.show){
 			self.drawGrid();
@@ -206,23 +326,29 @@
 
 	Plot.prototype.drawLineGraph = function(){
 		var self = this,
-			heightUnits = 0,
-			unitWidth, unitHeight;
+			maxUnits, minUnits, unitWidth, unitHeight;
 
-		// get data max
+		// get data min/max
 		for(var i = 0; i < self.data.length; i++){
-			if(self.data[i][1] > heightUnits){
-				heightUnits = self.data[i][1];
+			if(self.data[i][1] > maxUnits || typeof maxUnits === "undefined"){
+				maxUnits = self.data[i][1];
+			}
+			if(self.data[i][1] < minUnits || typeof minUnits === "undefined"){
+				minUnits = self.data[i][1];
 			}
 		}
 
 		// set chart measurement units
 		unitWidth = self.canvas.width / self.data.length;
-		unitHeight = (self.canvas.height / (heightUnits + 1));
+		unitHeight = self.canvas.height / ((Math.abs(maxUnits) + Math.abs(minUnits) + 1));
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
-		self.grid.units = heightUnits + 1;
+		self.grid.units = {
+			max: maxUnits + 1,
+			min: minUnits,
+			total: ((Math.abs(maxUnits) + Math.abs(minUnits) + 1))
+		}
 
 		if(self.config.grid.show){
 			self.drawGrid();
@@ -282,7 +408,7 @@
 		}
 
 		// draw horizontal lines
-		for(var i = 0; i < self.grid.units; i++){
+		for(var i = 0; i < self.grid.units.total; i++){
 
 			if(i > 0){
 				self.graphContext.moveTo(0, Math.round(i * self.grid.unitHeight));
