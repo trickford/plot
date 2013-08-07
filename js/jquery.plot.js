@@ -42,9 +42,9 @@
 					"handleWidth": 10, // width of range handles if no image set
 					"handleHeight": 40, // height of range handles if no image set
 					"gridColor": "#F0F0F0", // color or grid lines
-					"labelTextSize": 14, // size of label text
-					"labelLeftWidth": 30, // width of vertical label div
-					"labelBottomHeight": 30, // height of horizontal label div
+					"labelTextSize": 12, // size of label text
+					"labelLeftWidth": 20, // width of vertical label div
+					"labelBottomHeight": 20, // height of horizontal label div
 					"infoColor": "#EFEFEF", // background color of info box
 					"infoBorder": "#CCCCCC", // border color of info box
 					"infoTextSize": 10 // text size for info box
@@ -55,8 +55,15 @@
 		self.data = data;
 		self.$el = $(elem);
 		self.callback = callback;
-		self.range = self.$el.data("range");
-		self.grid = {},
+		self.grid = {};
+		self.range = self.$el.data("range") || {
+			from: {},
+			to: {},
+			handles: {
+				left: {},
+				right: {}
+			}
+		};
 		self.canvas = {
 			position: "absolute",
 			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - 2 : self.config.width - 2,
@@ -75,17 +82,6 @@
 			}
 		}else{
 			self.createElements();
-		}
-
-		if(typeof self.range === "undefined"){
-			self.range = {
-				from: {},
-				to: {},
-				handles: {
-					left: {},
-					right: {}
-				}
-			}
 		}
 
 		if(self.config.style.handleImage){
@@ -113,9 +109,15 @@
 
 		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
 		self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
-		self.$labelLeft = self.$el.find("div." + self.config.classes.label + "-left");
-		self.$labelBottom = self.$el.find("div." + self.config.classes.label + "-bottom");
-		self.$info = self.$el.find("div." + self.config.classes.info);
+
+		if(self.config.labels.show){
+			self.$labelLeft = self.$el.find("div." + self.config.classes.label + "-left");
+			self.$labelBottom = self.$el.find("div." + self.config.classes.label + "-bottom");
+		}
+
+		if(self.config.info.show){
+			self.$info = self.$el.find("div." + self.config.classes.info);
+		}
 	}
 
 	Plot.prototype.createLabels = function(){
@@ -517,13 +519,9 @@
 		var self = this,
 			info, pos;
 
-		point = {
-			x: self.data[Math.round(rect.x / self.grid.unitWidth) - 1][0],
-			y: self.data[Math.round(rect.x / self.grid.unitWidth) - 1][1],
-			i: Math.round(rect.x / self.grid.unitWidth) - 1
-		}
+		point = self.data[Math.round(rect.x / self.grid.unitWidth) - 1] || self.data[0];
 
-		info = self.config.info.xaxis + ": " + self.convertTime(point.x) + ", " + self.config.info.yaxis + ": " + point.y;
+		info = self.config.info.xaxis + ": " + self.convertTime(point[0]) + ", " + self.config.info.yaxis + ": " + point[1];
 		
 		self.$info.html(info).show();
 	}
@@ -817,8 +815,8 @@
 	}
 
 	$.fn.plot = function(data, config, callback){
-		new Plot(this, data, config, callback);
-		return this;
+		var plot = new Plot(this, data, config, callback);
+		return plot;
 	}
 
 })(jQuery);
