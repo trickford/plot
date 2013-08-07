@@ -8,7 +8,7 @@
 				"height": 300, // height of canvas
 				"type": "bar", // "bar" or "line"
 				"range": {
-					"show": true, // show range selection
+					"show": true // show range selection
 				},
 				"grid": {
 					"show": true, // show grid
