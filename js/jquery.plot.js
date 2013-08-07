@@ -306,8 +306,8 @@
 
 			var position = {
 					height: dataPoint * unitHeight,
-					width: Math.round(unitWidth - self.config.style.barPadding),
-					left: Math.round(unitWidth * i)
+					width: unitWidth - self.config.style.barPadding / 2,
+					left: (unitWidth * i) + self.config.style.barPadding / 2
 				}
 
 			self.graphContext.fillStyle = self.config.style.barColor;
@@ -369,11 +369,11 @@
 
 			var position = {
 					top: self.canvas.height - (dataPoint * unitHeight),
-					left: Math.round(unitWidth * i)
+					left: unitWidth * i
 				},
 				nextPosition = {
 					top: self.canvas.height - (nextPoint * unitHeight),
-					left: Math.round(unitWidth * (i + 1))
+					left: unitWidth * (i + 1)
 				}
 			self.graphContext.strokeStyle = self.config.style.lineColor;
 
