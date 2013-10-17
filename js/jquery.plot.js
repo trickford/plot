@@ -452,7 +452,7 @@
 		self.range.to.px = Math.round(position.width) + self.range.from.px;
 
 		self.range.from.index = Math.round(self.range.from.px / self.grid.unitWidth);
-		self.range.to.index = Math.round((self.range.to.px / self.grid.unitWidth) - 1);
+		self.range.to.index = Math.round(self.range.to.px / self.grid.unitWidth);
 
 		self.range.from.data = self.data[self.range.from.index];
 		self.range.to.data = self.data[self.range.to.index];
@@ -547,6 +547,11 @@
 				}
 			}
 
+			if(toIndex < fromIndex){
+				self.clearRange();
+				self.$el.removeData("range");
+			}
+
 			if(fromIndex !== self.range.from.index || toIndex !== self.range.to.index){
 
 				if(fromIndex < 0){
@@ -567,6 +572,9 @@
 				self.range.to.data = self.data[toIndex];
 
 				self.drawRange(self.$rangeCanvas, self.range.from.px, self.range.to.px);
+
+				self.returnRange();
+				
 			}
 		}
 
@@ -577,8 +585,8 @@
 
 		if(typeof self.callback === "function"){
 			self.callback({from: self.range.from.data, to: self.range.to.data});
-			self.$el.data("range", self.range);
 		}
+		self.$el.data("range", self.range);
 	}
 
 	Plot.prototype.loadRangeImage = function(){
