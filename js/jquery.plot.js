@@ -35,6 +35,7 @@
 					"barColor": "#FF9900", // color of bars in bar graph
 					"barPadding": 2, // padding between bars in bar graph
 					"lineColor": "#FF9900", // color of line in line graph
+					"lineWidth": 2, // width of line in line graph
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
 					"handleColor": "#868695", // color of range handles
@@ -357,6 +358,8 @@
 			self.drawGrid();
 		}
 		
+		self.graphContext.lineWidth = self.config.style.lineWidth;
+		self.graphContext.lineCap = "round";
 		self.graphContext.beginPath();
 
 		for(var i = 0; i < self.data.length; i++){
