@@ -16,8 +16,12 @@
 				},
 				"labels": {
 					"show": true, // show labels
-					"xaxis": "time", // x-axis label
-					"yaxis": "count" // y-axis label
+					"xLabel": false, // x-axis label
+					"xCount": 7, // number of labels to display
+					"xCustom": false, // array of custom labels
+					"yLabel": false, // y-axis label
+					"yCount": 3, // number of labels to display
+					"yCustom": false // array of custom labels
 				},
 				"info": {
 					"show": true, // show info overlay
@@ -32,10 +36,13 @@
 				},
 				"style": {
 					"border": "#CCCCCC", // border around canvas
+					"fillImage": "bg-chart.png", // URL for chart background image
 					"barColor": "#FF9900", // color of bars in bar graph
 					"barPadding": 2, // padding between bars in bar graph
-					"lineColor": "#FF9900", // color of line in line graph
+					"lineColor": "#108DC8", // color of line in line graph
 					"lineWidth": 2, // width of line in line graph
+					"lineFillColor": "#FFFFFF", // chart fill color
+					"lineFillImage": "bg-chart-lines.png", // URL for chart fill image, overrides lineFillColor
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
 					"handleColor": "#868695", // color of range handles
@@ -287,11 +294,7 @@
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
-		self.grid.units = {
-			max: maxUnits + 1,
-			min: minUnits,
-			total: ((Math.abs(maxUnits) + Math.abs(minUnits) + 1))
-		}
+		self.grid.units = maxUnits;
 		
 		if(self.config.grid.show){
 			self.drawGrid();
@@ -330,7 +333,9 @@
 
 	Plot.prototype.drawLineGraph = function(){
 		var self = this,
-			maxUnits, minUnits, unitWidth, unitHeight;
+			notations = [],
+			points = [],
+			maxUnits, minUnits, unitWidth, unitHeight, image;
 
 		// get data min/max
 		for(var i = 0; i < self.data.length; i++){
@@ -343,57 +348,122 @@
 		}
 
 		// set chart measurement units
-		unitWidth = self.canvas.width / self.data.length;
-		unitHeight = self.canvas.height / ((Math.abs(maxUnits) + Math.abs(minUnits) + 1));
+		self.grid.unitWidth = self.canvas.width / (self.data.length - 1);
+		self.grid.unitHeight = self.canvas.height / (maxUnits + (maxUnits * 0.1));
+		self.grid.units = maxUnits;
 
-		self.grid.unitWidth = unitWidth;
-		self.grid.unitHeight = unitHeight;
-		self.grid.units = {
-			max: maxUnits + 1,
-			min: minUnits,
-			total: ((Math.abs(maxUnits) + Math.abs(minUnits) + 1))
+		for(var d = 0; d < self.data.length; d++){
+			var point = {
+				data: self.data[d],
+				left: d * self.grid.unitWidth,
+				top: self.canvas.height - (self.data[d][1] * self.grid.unitHeight)
+			}
+			points.push(point);
+
+			if(self.data[d][2]){
+				self.data[d][3] = [point.left, point.top];
+				notations.push(self.data[d]);
+			}
+			if(notations.length){
+				self.notations = notations;
+			}
 		}
 
+		// draw grid
 		if(self.config.grid.show){
 			self.drawGrid();
 		}
-		
-		self.graphContext.lineWidth = self.config.style.lineWidth;
-		self.graphContext.lineCap = "round";
-		self.graphContext.beginPath();
 
-		for(var i = 0; i < self.data.length; i++){
-			var dataPoint = self.data[i][1],
-				nextPoint;
+		function drawChart(){
 
-			if(typeof self.data[i+1] !== "undefined"){
-				nextPoint = self.data[i+1][1];
-			}
-
-			var position = {
-					top: self.canvas.height - (dataPoint * unitHeight),
-					left: unitWidth * i
-				},
-				nextPosition = {
-					top: self.canvas.height - (nextPoint * unitHeight),
-					left: unitWidth * (i + 1)
-				}
+			// set graph styles
+			self.graphContext.lineWidth = self.config.style.lineWidth;
+			self.graphContext.lineJoin = "round";
 			self.graphContext.strokeStyle = self.config.style.lineColor;
 
-			if(i == 0){
-				self.graphContext.moveTo(position.left, position.top);
+			if(image){
+				//self.graphContext.drawImage(image,0,0,self.canvas.width, self.canvas.height);
 			}
 
-			if(dataPoint > 0){
-				self.graphContext.lineTo(nextPosition.left, nextPosition.top);
+			// begin drawing line
+			self.graphContext.beginPath();
+
+			// draw each point
+			for(var p = 0; p < points.length; p++){
+				var start, end;
+
+				// for first point (0)
+				if(p === 0){
+					self.graphContext.moveTo(-1, points[p].top);
+				}
+
+				// for points between 0 and n
+				if(p > 0 && p < points.length - 1){
+					self.graphContext.lineTo(points[p].left, points[p].top);
+				}
+
+				// for last point (n)
+				if(p === points.length - 1){
+					self.graphContext.lineTo(self.canvas.width + 1, points[p].top);
+
+					self.graphContext.lineTo(self.canvas.width + 1, self.canvas.height + 1);
+					self.graphContext.lineTo(-1, self.canvas.height + 1);
+				}
+
 			}
+
+			// finish drawing line
+			self.graphContext.closePath();
+
+			if(self.config.style.lineFillColor){
+				self.graphContext.fillStyle = self.config.style.lineFillColor;
+			}
+
+			// lineFillImage overrides lineFillColor
+			if(self.config.style.lineFillImage){
+				self.graphContext.fillStyle = self.graphContext.createPattern(image, "repeat-x");
+			}
+
+			self.graphContext.fill();
+			self.graphContext.stroke();
+
+			if(self.notations.length){
+				console.log("notations",self.notations.length);
+
+				for(var n = 0; n < self.notations.length; n++){
+					self.graphContext.beginPath();
+					self.graphContext.arc(self.notations[n][3][0], self.notations[n][3][1], 4, 0, 2 * Math.PI, false);
+					self.graphContext.fillStyle = 'white';
+					self.graphContext.fill();
+					self.graphContext.lineWidth = 2;
+					self.graphContext.stroke();
+					
+				}
+			}
+
+		};
+
+		// draw chart
+		if(self.config.style.lineFillImage){
+
+			// create image element
+			image = document.createElement("img");
+
+			// set src
+			image.src = self.config.style.lineFillImage;
+
+			image.onload = function(){
+				drawChart();
+			}
+
+		}else{
+			drawChart();
 		}
-
-		self.graphContext.stroke();
 
 		self.updateRange();
 
 		self.$el.data("data",self.data);
+		
 	}
 
 	Plot.prototype.drawGrid = function(){
@@ -414,7 +484,7 @@
 		}
 
 		// draw horizontal lines
-		for(var i = 0; i < self.grid.units.total; i++){
+		for(var i = 0; i < self.grid.units; i++){
 
 			if(i > 0){
 				self.graphContext.moveTo(0, Math.round(i * self.grid.unitHeight));
