@@ -36,13 +36,13 @@
 				},
 				"style": {
 					"border": "#CCCCCC", // border around canvas
-					"fillImage": "bg-chart.png", // URL for chart background image
+					"fillImage": false, // URL for chart background image
 					"barColor": "#FF9900", // color of bars in bar graph
 					"barPadding": 2, // padding between bars in bar graph
 					"lineColor": "#108DC8", // color of line in line graph
 					"lineWidth": 2, // width of line in line graph
 					"lineFillColor": "#FFFFFF", // chart fill color
-					"lineFillImage": "bg-chart-lines.png", // URL for chart fill image, overrides lineFillColor
+					"lineFillImage": false, // URL for chart fill image, overrides lineFillColor
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
 					"handleColor": "#868695", // color of range handles
@@ -463,7 +463,7 @@
 		self.updateRange();
 
 		self.$el.data("data",self.data);
-		
+
 	}
 
 	Plot.prototype.drawGrid = function(){
