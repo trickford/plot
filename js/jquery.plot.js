@@ -12,7 +12,9 @@
 				},
 				"grid": {
 					"show": true, // show grid
-					"interval": 10 // how many points between grid lines
+					"interval": 10, // how many data points between vertical grid lines
+					"xSize": 1,
+					"ySize": 1
 				},
 				"labels": {
 					"show": true, // show labels
@@ -146,14 +148,14 @@
 			top: 0,
 			right: 2,
 			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelLeft).html(self.grid.units.max);
+		}).appendTo(self.$labelLeft).html(self.grid.max);
 
 		$("<span>").addClass(self.config.classes.label).css({
 			position: "absolute",
 			bottom: 0,
 			right: 2,
 			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelLeft).html(self.grid.units.min);
+		}).appendTo(self.$labelLeft).html(self.grid.min);
 
 		// create bottom labels
 		$("<span>").addClass(self.config.classes.label).css({
@@ -300,7 +302,7 @@
 			if(self.config.grid.show){
 				self.drawGrid();
 			}
-			
+
 		}
 	}
 
@@ -324,7 +326,7 @@
 
 		self.grid.unitWidth = unitWidth;
 		self.grid.unitHeight = unitHeight;
-		self.grid.units = maxUnits;
+		self.grid.units = maxUnits + (maxUnits * 0.1);
 		
 		if(self.config.grid.show){
 			self.drawGrid();
@@ -380,7 +382,9 @@
 		// set chart measurement units
 		self.grid.unitWidth = self.canvas.width / (self.data.length - 1);
 		self.grid.unitHeight = self.canvas.height / (maxUnits + (maxUnits * 0.1));
-		self.grid.units = maxUnits;
+		self.grid.units = Math.ceil(maxUnits + (maxUnits * 0.1));
+		self.grid.max = maxUnits;
+		self.grid.min = minUnits;
 
 		for(var d = 0; d < self.data.length; d++){
 			var point = {
@@ -454,7 +458,7 @@
 			self.graphContext.stroke();
 
 			if(self.notations.length){
-				console.log("notations",self.notations.length);
+				//console.log("notations",self.notations.length);
 
 				for(var n = 0; n < self.notations.length; n++){
 					self.graphContext.beginPath();
@@ -500,23 +504,31 @@
 		self.graphContext.strokeStyle = self.config.style.gridColor;
 
 		// draw vertical lines
-		for(var i = 0; i < (self.data.length / self.config.grid.interval); i++){
+		self.graphContext.lineWidth = self.config.grid.ySize;
 
-			if(i > 0){
-				self.graphContext.moveTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), 0);
-				self.graphContext.lineTo(Math.round(i * self.grid.unitWidth * self.config.grid.interval), self.canvas.height);
+		if(self.config.grid.ySize > 0){
+			for(var i = 0; i < (self.data.length / self.config.grid.interval); i++){
+
+				if(i > 0){
+					self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.interval), 0);
+					self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.interval), self.canvas.height);
+				}
+
 			}
-
 		}
 
 		// draw horizontal lines
-		for(var i = 0; i < self.grid.units; i++){
+		self.graphContext.lineWidth = self.config.grid.xSize;
 
-			if(i > 0){
-				self.graphContext.moveTo(0, Math.round(i * self.grid.unitHeight));
-				self.graphContext.lineTo(self.canvas.width, Math.round(i * self.grid.unitHeight));
+		if(self.config.grid.xSize > 0){
+			for(var i = 0; i < self.grid.units; i++){
+
+				if(i > 0){
+					self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight));
+					self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight));
+				}
+
 			}
-
 		}
 
 		self.graphContext.stroke();
@@ -618,7 +630,7 @@
 		var self = this,
 			info, pos;
 
-		point = self.data[Math.round(rect.x / self.grid.unitWidth) - 1] || self.data[0];
+		point = self.data[Math.round(rect.x / self.grid.unitWidth)] || self.data[0];
 
 		info = self.config.info.xaxis + ": " + point[0] + ", " + self.config.info.yaxis + ": " + point[1];
 		
