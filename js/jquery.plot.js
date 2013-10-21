@@ -98,6 +98,10 @@
 
 		self.rangeEvents();
 
+		if(self.config.style.fillImage){
+			self.drawBackground();
+		}
+
 		if(self.config.type === "bar"){
 			self.drawBarGraph();
 		}else if(self.config.type === "line"){
@@ -269,6 +273,37 @@
 		self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 	}
 
+	Plot.prototype.drawBackground = function(){
+		var self = this;
+
+		// create image element
+		var image = new Image();
+
+		// set src
+		image.src = self.config.style.fillImage;
+
+		image.onload = function(){
+
+			self.graphContext.beginPath();
+			self.graphContext.moveTo(0,0);
+			self.graphContext.lineTo(self.canvas.width, 0);
+			self.graphContext.lineTo(self.canvas.width, self.canvas.height);
+			self.graphContext.lineTo(0, self.canvas.height);
+			self.graphContext.closePath();
+			self.graphContext.stroke();
+
+			self.graphContext.fillStyle = self.graphContext.createPattern(image, "repeat");
+
+			self.graphContext.fill();
+
+			// draw grid
+			if(self.config.grid.show){
+				self.drawGrid();
+			}
+			
+		}
+	}
+
 	Plot.prototype.drawBarGraph = function(){
 		var self = this,
 			maxUnits, minUnits, unitWidth, unitHeight;
@@ -359,13 +394,13 @@
 				self.data[d][3] = [point.left, point.top];
 				notations.push(self.data[d]);
 			}
-			if(notations.length){
-				self.notations = notations;
-			}
+		}
+		if(notations.length){
+			self.notations = notations;
 		}
 
 		// draw grid
-		if(self.config.grid.show){
+		if(self.config.grid.show && !self.config.style.lineFillImage){
 			self.drawGrid();
 		}
 
@@ -375,10 +410,6 @@
 			self.graphContext.lineWidth = self.config.style.lineWidth;
 			self.graphContext.lineJoin = "round";
 			self.graphContext.strokeStyle = self.config.style.lineColor;
-
-			if(image){
-				//self.graphContext.drawImage(image,0,0,self.canvas.width, self.canvas.height);
-			}
 
 			// begin drawing line
 			self.graphContext.beginPath();
@@ -442,7 +473,7 @@
 		if(self.config.style.lineFillImage){
 
 			// create image element
-			image = document.createElement("img");
+			image = new Image();
 
 			// set src
 			image.src = self.config.style.lineFillImage;
