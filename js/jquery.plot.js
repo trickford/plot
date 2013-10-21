@@ -133,13 +133,8 @@
 
 		var leftMin, leftMax, bottomMin, bottomMax;
 			
-		if(self.config.labels.xaxis === "time"){
-			bottomMin = self.convertTime(self.data[0][0]);
-			bottomMax = self.convertTime(self.data[self.data.length - 1][0]);
-		}else{
-			bottomMin = self.data[0][0];
-			bottomMax = self.data[self.data.length - 1][0];
-		}
+		bottomMin = self.data[0][0];
+		bottomMax = self.data[self.data.length - 1][0];
 
 		// create left labels
 		$("<span>").addClass(self.config.classes.label).css({
@@ -594,7 +589,7 @@
 
 		point = self.data[Math.round(rect.x / self.grid.unitWidth) - 1] || self.data[0];
 
-		info = self.config.info.xaxis + ": " + self.convertTime(point[0]) + ", " + self.config.info.yaxis + ": " + point[1];
+		info = self.config.info.xaxis + ": " + point[0] + ", " + self.config.info.yaxis + ": " + point[1];
 		
 		self.$info.html(info).show();
 	}
@@ -668,21 +663,6 @@
 		self.range.handles.image = new Image();
 		self.range.handles.image.src = self.config.style.handleImage;
 
-	}
-
-	Plot.prototype.convertTime = function(timestamp){
-		var date, hours, minutes, formattedTime;
-
-		// create a new javascript Date object based on the timestamp
-		// multiplied by 10000 so that the argument is in milliseconds, not seconds
-		date = new Date(timestamp*10000);
-
-		hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours();
-		minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes();
-		// will display time in 10:30 format
-		formattedTime = hours + ':' + minutes;
-
-		return formattedTime;
 	}
 
 	Plot.prototype.rangeEvents = function(){
