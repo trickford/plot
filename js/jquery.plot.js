@@ -39,7 +39,7 @@
 					"info": "info" // class for info div
 				},
 				"style": {
-					"border": "#CCCCCC", // border around canvas
+					"borderColor": "#CCCCCC", // border around canvas
 					"fillImage": false, // URL for chart background image
 					"barColor": "#FF9900", // color of bars in bar graph
 					"barPadding": 2, // padding between bars in bar graph
@@ -79,11 +79,11 @@
 		};
 		self.canvas = {
 			position: "absolute",
-			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - 2 : self.config.width - 2,
-			height: (self.config.labels.show) ? self.config.height - self.config.style.labelBottomHeight - 2 : self.config.height - 2,
+			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - (self.config.style.borderColor ? 2 : 0) : self.config.width - (self.config.style.borderColor ? 2 : 0),
+			height: (self.config.labels.show) ? self.config.height - self.config.style.labelBottomHeight - (self.config.style.borderColor ? 2 : 0) : self.config.height - (self.config.style.borderColor ? 2 : 0),
 			left: (self.config.labels.show) ? self.config.style.labelLeftWidth : 0,
 			top: 0,
-			border: "solid 1px " + self.config.style.border
+			border: (self.config.style.borderColor ? "1px solid " + self.config.style.borderColor : "none")
 		};
 
 		self.defineElements();
