@@ -311,22 +311,43 @@
 			var label = xLabels[x],
 				containerWidth = self.$labelBottom.width(),
 				labelCount = xLabels.length,
-				widthInterval = Math.floor(containerWidth / (labelCount - 1)),
 				textHeight = self.config.style.labelBottomTextSize,
-				left, width, align, css;
+				widthInterval, left, width, align, css;
 
-			if(x === 0){
-				left = 0;
-				align = "left";
-				width = widthInterval / 2;
-			}else if(x === labelCount - 1){
-				left = (containerWidth - (containerWidth / (labelCount - 1))) + (widthInterval / 2);
-				width = widthInterval / 2;
-				align = "right";
+			if(self.config.type === "line"){
+
+				widthInterval = Math.floor(containerWidth / (labelCount - 1));
+				if(x === 0){
+					left = 0;
+					align = "left";
+					width = widthInterval / 2;
+				}else if(x === labelCount - 1){
+					left = (containerWidth - (containerWidth / (labelCount - 1))) + (widthInterval / 2);
+					width = widthInterval / 2;
+					align = "right";
+				}else{
+					left = (containerWidth / (labelCount - 1)) * (x - 1) + (widthInterval / 2);
+					align = "center";
+					width = widthInterval;
+				}
+				
 			}else{
-				left = (containerWidth / (labelCount - 1)) * (x - 1) + (widthInterval / 2);
-				align = "center";
-				width = widthInterval;
+
+				widthInterval = Math.floor(containerWidth / labelCount);
+				if(x === 0){
+					left = 0;
+					align = "center";
+					width = widthInterval;
+				}else if(x === labelCount - 1){
+					left = containerWidth - (containerWidth / labelCount);
+					align = "center";
+					width = widthInterval;
+				}else{
+					left = (containerWidth / labelCount) * x;
+					align = "center";
+					width = widthInterval;
+				}
+
 			}
 
 			css = {
