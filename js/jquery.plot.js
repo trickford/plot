@@ -148,7 +148,8 @@
 			var yUnitSize = self.grid.units / (self.config.labels.yCount - 1);
 
 			for(var l = 0; l < self.config.labels.yCount; l++){
-				yLabels.push(Math.round(l * yUnitSize));
+				var label = Math.round(l * yUnitSize);
+				yLabels.push(self.processNumber(label));
 			}
 
 			yLabels.reverse();
@@ -240,6 +241,23 @@
 
 		self.$labelLeft.html("");
 		self.$labelBottom.html("");
+	}
+
+	Plot.prototype.processNumber = function(number){
+		var self = this;
+
+		if(number > 999 && number < 1000000){
+			var newNumber = (number / 1000).toFixed(1) + "k";
+
+			return newNumber;
+		}else if(number > 999999){
+			var newNumber = (number / 1000000).toFixed(1) + "m";
+
+			return newNumber;
+		}else{
+			return number;
+		}
+
 	}
 
 	Plot.prototype.createElements = function(){
