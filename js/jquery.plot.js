@@ -20,10 +20,10 @@
 					"show": true, // show labels
 					"xLabel": false, // x-axis label
 					"xCount": 7, // number of labels to display
-					"xCustom": false, // array of custom labels
+					"xCustomLabels": false, // array of custom labels
 					"yLabel": false, // y-axis label
 					"yCount": 3, // number of labels to display
-					"yCustom": false // array of custom labels
+					"yCustomLabels": false // array of custom labels
 				},
 				"info": {
 					"show": true, // show info overlay
@@ -135,42 +135,103 @@
 	}
 
 	Plot.prototype.createLabels = function(){
-		var self = this;
+		var self = this,
+			yLabels = [],
+			xLabels = [];
 
-		var leftMin, leftMax, bottomMin, bottomMax;
-			
-		bottomMin = self.data[0][0];
-		bottomMax = self.data[self.data.length - 1][0];
+		// setup y labels
+		if(self.config.labels.yCustomLabels.length){
 
-		// create left labels
-		$("<span>").addClass(self.config.classes.label).css({
-			position: "absolute",
-			top: 0,
-			right: 2,
-			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelLeft).html(self.grid.max);
+			yLabels = self.config.labels.yCustomLabels;
 
-		$("<span>").addClass(self.config.classes.label).css({
-			position: "absolute",
-			bottom: 0,
-			right: 2,
-			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelLeft).html(self.grid.min);
+		}else{
+			var yUnitSize = self.grid.units / (self.config.labels.yCount - 1);
 
-		// create bottom labels
-		$("<span>").addClass(self.config.classes.label).css({
-			position: "absolute",
-			top: 2,
-			left: 0,
-			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelBottom).html(bottomMin);
+			for(var l = 0; l < self.config.labels.yCount; l++){
+				yLabels.push(Math.round(l * yUnitSize));
+			}
 
-		$("<span>").addClass(self.config.classes.label).css({
-			position: "absolute",
-			top: 2,
-			right: 0,
-			"font-size": self.config.style.labelTextSize
-		}).appendTo(self.$labelBottom).html(bottomMax);
+			yLabels.reverse();
+		}
+
+		// setup x labels
+		if(self.config.labels.xCustomLabels.length){
+
+			xLabels = self.config.labels.xCustomLabels;
+
+		}else{
+
+			for(var l = 0; l < self.config.labels.xCount; l++){
+				var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount));
+				xLabels.push(label[Math.round(label.length / 2)][0]);
+			}
+
+		}
+
+		// create y labels
+		for(var y = 0; y < yLabels.length; y++){
+
+			var label = yLabels[y],
+				containerHeight = self.$labelLeft.height(),
+				labelCount = yLabels.length,
+				heightInterval = (self.grid.unitHeight * self.grid.units) / (labelCount - 1),
+				textHeight = self.config.style.labelTextSize,
+				top, css;
+
+			if(y === 0){
+				top = 0;
+			}else if(y === labelCount - 1){
+				top = containerHeight - textHeight;
+			}else{
+				top = (heightInterval * y) - (textHeight / 2);
+			}
+
+			css = {
+				position: "absolute",
+				top: top + "px",
+				right: 2 + "px",
+				"font-size": textHeight + "px",
+				"line-height": textHeight + "px"
+			};
+
+			$("<span>").addClass(self.config.classes.label).css(css).appendTo(self.$labelLeft).html(label);
+
+		}
+
+		// create x labels
+		for(var x = 0; x < xLabels.length; x++){
+
+			var label = xLabels[x],
+				containerWidth = self.$labelBottom.width(),
+				labelCount = xLabels.length,
+				widthInterval = Math.floor(containerWidth / labelCount),
+				textHeight = self.config.style.labelTextSize,
+				left, align, css;
+
+			if(x === 0){
+				left = 0;
+				align = "center";
+			}else if(x === labelCount - 1){
+				left = containerWidth - (containerWidth / labelCount);
+				align = "center";
+			}else{
+				left = (containerWidth / labelCount) * x;
+				align = "center";
+			}
+
+			css = {
+				position: "absolute",
+				left: left + "px",
+				top: 2 + "px",
+				width: widthInterval,
+				"font-size": textHeight + "px",
+				"line-height": textHeight + "px",
+				"text-align": align
+			};
+
+			$("<span>").addClass(self.config.classes.label).css(css).appendTo(self.$labelBottom).html(label);
+
+		}
 
 	}
 
@@ -381,10 +442,8 @@
 
 		// set chart measurement units
 		self.grid.unitWidth = self.canvas.width / (self.data.length - 1);
-		self.grid.unitHeight = self.canvas.height / (maxUnits + (maxUnits * 0.1));
-		self.grid.units = Math.ceil(maxUnits + (maxUnits * 0.1));
-		self.grid.max = maxUnits;
-		self.grid.min = minUnits;
+		self.grid.units = Math.ceil(maxUnits * 1.1);
+		self.grid.unitHeight = self.canvas.height / self.grid.units;
 
 		for(var d = 0; d < self.data.length; d++){
 			var point = {
@@ -457,8 +516,7 @@
 			self.graphContext.fill();
 			self.graphContext.stroke();
 
-			if(self.notations.length){
-				//console.log("notations",self.notations.length);
+			if(self.notations){
 
 				for(var n = 0; n < self.notations.length; n++){
 					self.graphContext.beginPath();
