@@ -311,26 +311,29 @@
 			var label = xLabels[x],
 				containerWidth = self.$labelBottom.width(),
 				labelCount = xLabels.length,
-				widthInterval = Math.floor(containerWidth / labelCount),
+				widthInterval = Math.floor(containerWidth / (labelCount - 1)),
 				textHeight = self.config.style.labelBottomTextSize,
-				left, align, css;
+				left, width, align, css;
 
 			if(x === 0){
 				left = 0;
-				align = "center";
+				align = "left";
+				width = widthInterval / 2;
 			}else if(x === labelCount - 1){
-				left = containerWidth - (containerWidth / labelCount);
-				align = "center";
+				left = (containerWidth - (containerWidth / (labelCount - 1))) + (widthInterval / 2);
+				width = widthInterval / 2;
+				align = "right";
 			}else{
-				left = (containerWidth / labelCount) * x;
+				left = (containerWidth / (labelCount - 1)) * (x - 1) + (widthInterval / 2);
 				align = "center";
+				width = widthInterval;
 			}
 
 			css = {
 				position: "absolute",
 				left: left + "px",
 				top: self.config.style.labelPadding + "px",
-				width: widthInterval,
+				width: width,
 				height: self.config.style.labelBottomHeight - self.config.style.labelPadding + "px",
 				color: self.config.style.labelTextColor,
 				"font-size": textHeight + "px",
