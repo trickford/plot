@@ -18,6 +18,7 @@
 				},
 				"labels": {
 					"show": true, // show labels
+					"decimals": 1, // decimal points for left label if over 1000
 					"xLabel": false, // x-axis label
 					"xCount": 7, // number of labels to display
 					"xCustomLabels": false, // array of custom labels
@@ -31,6 +32,7 @@
 					"yaxis": "TPM" // y-axis into description
 				},
 				"classes": {
+					"bg": "bg", // class for graph canvas
 					"graph": "graph", // class for graph canvas
 					"range": "range", // class for range canvas
 					"label": "label", // class for label divs
@@ -52,8 +54,9 @@
 					"handleWidth": 10, // width of range handles if no image set
 					"handleHeight": 40, // height of range handles if no image set
 					"gridColor": "#F0F0F0", // color or grid lines
-					"labelTextSize": 12, // size of label text
+					"labelLeftTextSize": 12, // size of left label text
 					"labelLeftWidth": 20, // width of vertical label div
+					"labelBottomTextSize": 12, // size of bottom label text
 					"labelBottomHeight": 20, // height of horizontal label div
 					"infoColor": "#EFEFEF", // background color of info box
 					"infoBorder": "#CCCCCC", // border color of info box
@@ -118,11 +121,110 @@
 
 	}
 
+	Plot.prototype.createElements = function(){
+		var self = this;
+
+		// create canvas element and range selector divs
+		var bg = $("<div>").addClass(self.config.classes.bg),
+			canvas = $("<canvas>").addClass(self.config.classes.graph),
+			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
+			labelLeft = $("<div>").addClass(self.config.classes.label + "-left"),
+			labelBottom = $("<div>").addClass(self.config.classes.label + "-bottom"),
+			info = $("<div>").addClass(self.config.classes.info),
+			css = {
+				left: {
+					position: "absolute",
+					top: 0,
+					left: 0,
+					height: self.config.height - self.config.style.labelBottomHeight,
+					width: self.config.style.labelLeftWidth
+				},
+				bottom: {
+					position: "absolute",
+					bottom: 0,
+					right: 0,
+					height: self.config.style.labelBottomHeight,
+					width: self.config.width - self.config.style.labelLeftWidth
+				},
+				info: {
+					position: "absolute",
+					top: 0,
+					right: 0,
+					"font-size": self.config.style.infoTextSize,
+					background: self.config.style.infoColor,
+					border: "1px solid " + self.config.style.infoBorder,
+					opacity: 0.7,
+					padding: 10,
+					display: "none"
+				}
+			};
+
+		// create canvas and set dimensions
+		bg.attr({
+			height: self.canvas.height,
+			width: self.canvas.width
+		}).css(self.canvas).appendTo(self.$el);
+
+		// create canvas and set dimensions
+		canvas.attr({
+			height: self.canvas.height,
+			width: self.canvas.width
+		}).css(self.canvas).appendTo(self.$el);
+
+		// create range container and set dimensions and positioning
+		rangeCanvas.attr({
+			height: self.canvas.height,
+			width: self.canvas.width
+		}).css(self.canvas).appendTo(self.$el);
+
+		if(self.config.labels.show){
+			// create left side label container and set dimensions and positioning
+			labelLeft.attr({
+				height: css.left.height,
+				width: css.left.width
+			}).css(css.left).appendTo(self.$el);
+
+			// create bottom side label container and set dimensions and positioning
+			labelBottom.attr({
+				height: css.bottom.height,
+				width: css.bottom.width
+			}).css(css.bottom).appendTo(self.$el);
+		}
+
+		if(self.config.info.show){
+			info.css(css.info).appendTo(self.$el);
+		}
+
+		// set dimensions of parent container
+		self.$el.css({
+			width: self.config.width,
+			height: self.config.height,
+			position: "relative"
+		});
+
+		self.defineElements();
+
+		if(typeof G_vmlCanvasManager !== "undefined"){
+			G_vmlCanvasManager.initElement(self.$canvas[0]);
+		}
+		self.graphContext = self.$canvas[0].getContext("2d");
+		if(self.rangeContext){
+			if(typeof G_vmlCanvasManager !== "undefined"){
+				G_vmlCanvasManager.initElement(self.$rangeCanvas[0]);
+			}
+			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
+		}
+	}
+
 	Plot.prototype.defineElements = function(){
 		var self = this;
 
+		self.$bg = self.$el.find("div." + self.config.classes.bg);
+
 		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
-		self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
+		if(self.config.range.show){
+			self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
+		}
 
 		if(self.config.labels.show){
 			self.$labelLeft = self.$el.find("div." + self.config.classes.label + "-left");
@@ -176,7 +278,7 @@
 				containerHeight = self.$labelLeft.height(),
 				labelCount = yLabels.length,
 				heightInterval = (self.grid.unitHeight * self.grid.units) / (labelCount - 1),
-				textHeight = self.config.style.labelTextSize,
+				textHeight = self.config.style.labelLeftTextSize,
 				top, css;
 
 			if(y === 0){
@@ -191,6 +293,9 @@
 				position: "absolute",
 				top: top + "px",
 				right: 2 + "px",
+				width: "100%",
+				color: self.config.style.labelTextColor,
+				"text-align": "right",
 				"font-size": textHeight + "px",
 				"line-height": textHeight + "px"
 			};
@@ -206,7 +311,7 @@
 				containerWidth = self.$labelBottom.width(),
 				labelCount = xLabels.length,
 				widthInterval = Math.floor(containerWidth / labelCount),
-				textHeight = self.config.style.labelTextSize,
+				textHeight = self.config.style.labelBottomTextSize,
 				left, align, css;
 
 			if(x === 0){
@@ -225,6 +330,7 @@
 				left: left + "px",
 				top: 2 + "px",
 				width: widthInterval,
+				color: self.config.style.labelTextColor,
 				"font-size": textHeight + "px",
 				"line-height": textHeight + "px",
 				"text-align": align
@@ -247,97 +353,17 @@
 		var self = this;
 
 		if(number > 999 && number < 1000000){
-			var newNumber = (number / 1000).toFixed(1) + "k";
+			var newNumber = (number / 1000).toFixed(self.config.labels.decimals) + "k";
 
 			return newNumber;
 		}else if(number > 999999){
-			var newNumber = (number / 1000000).toFixed(1) + "m";
+			var newNumber = (number / 1000000).toFixed(self.config.labels.decimals) + "m";
 
 			return newNumber;
 		}else{
 			return number;
 		}
 
-	}
-
-	Plot.prototype.createElements = function(){
-		var self = this;
-
-		// create canvas element and range selector divs
-		var canvas = $("<canvas>").addClass(self.config.classes.graph),
-			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
-			labelLeft = $("<div>").addClass(self.config.classes.label + "-left"),
-			labelBottom = $("<div>").addClass(self.config.classes.label + "-bottom"),
-			info = $("<div>").addClass(self.config.classes.info),
-			css = {
-				left: {
-					position: "absolute",
-					top: 0,
-					left: 0,
-					height: self.config.height - self.config.style.labelBottomHeight,
-					width: self.config.style.labelLeftWidth
-				},
-				bottom: {
-					position: "absolute",
-					bottom: 0,
-					right: 0,
-					height: self.config.style.labelBottomHeight,
-					width: self.config.width - self.config.style.labelLeftWidth
-				},
-				info: {
-					position: "absolute",
-					top: 0,
-					right: 0,
-					"font-size": self.config.style.infoTextSize,
-					background: self.config.style.infoColor,
-					border: "1px solid " + self.config.style.infoBorder,
-					opacity: 0.7,
-					padding: 10,
-					display: "none"
-				}
-			};
-
-		// create canvas and set dimensions
-		canvas.attr({
-			height: self.canvas.height,
-			width: self.canvas.width
-		}).css(self.canvas).appendTo(self.$el);
-
-		// create range container and set dimensions and positioning
-		rangeCanvas.attr({
-			height: self.canvas.height,
-			width: self.canvas.width
-		}).css(self.canvas).appendTo(self.$el);
-
-		if(self.config.labels.show){
-			// create left side label container and set dimensions and positioning
-			labelLeft.attr({
-				height: css.left.height,
-				width: css.left.width
-			}).css(css.left).appendTo(self.$el);
-
-			// create bottom side label container and set dimensions and positioning
-			labelBottom.attr({
-				height: css.bottom.height,
-				width: css.bottom.width
-			}).css(css.bottom).appendTo(self.$el);
-		}
-
-		if(self.config.info.show){
-			info.css(css.info).appendTo(self.$el);
-		}
-
-		// set dimensions of parent container
-		self.$el.css({
-			width: self.config.width,
-			height: self.config.height,
-			position: "relative"
-		});
-
-		self.defineElements();
-
-		self.graphContext = self.$canvas[0].getContext("2d");
-		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
 	}
 
 	Plot.prototype.clearGraph = function(){
@@ -357,32 +383,9 @@
 	Plot.prototype.drawBackground = function(){
 		var self = this;
 
-		// create image element
-		var image = new Image();
-
-		// set src
-		image.src = self.config.style.fillImage;
-
-		image.onload = function(){
-
-			self.graphContext.beginPath();
-			self.graphContext.moveTo(0,0);
-			self.graphContext.lineTo(self.canvas.width, 0);
-			self.graphContext.lineTo(self.canvas.width, self.canvas.height);
-			self.graphContext.lineTo(0, self.canvas.height);
-			self.graphContext.closePath();
-			self.graphContext.stroke();
-
-			self.graphContext.fillStyle = self.graphContext.createPattern(image, "repeat");
-
-			self.graphContext.fill();
-
-			// draw grid
-			if(self.config.grid.show){
-				self.drawGrid();
-			}
-
-		}
+		self.$bg.css({
+			"background": "url(" + self.config.style.fillImage + ") repeat 0 0"
+		})
 	}
 
 	Plot.prototype.drawBarGraph = function(){
@@ -481,7 +484,7 @@
 		}
 
 		// draw grid
-		if(self.config.grid.show && !self.config.style.lineFillImage){
+		if(self.config.grid.show){
 			self.drawGrid();
 		}
 
@@ -807,190 +810,200 @@
 		// remove all existing mouse events to prevent duplicate event firing
 		self.$el.unbind("mousemove");
 		self.$el.unbind("mouseout");
-		self.$rangeCanvas.unbind("mousedown");
-		self.$rangeCanvas.unbind("mousemove");
-		self.$rangeCanvas.unbind("mouseup");
+		if(self.rangeContext){
+			self.$rangeCanvas.unbind("mousedown");
+			self.$rangeCanvas.unbind("mousemove");
+			self.$rangeCanvas.unbind("mouseup");
+		}
 
 		// get cursor location, determine if a resize or move event is applicable
 		self.$el.mousemove(function(e){
 			rect.x = e.offsetX;
 			rect.y = e.offsetY;
 
-			self.updateInfoBox(rect);
+			if(self.config.info.show){
+				self.updateInfoBox(rect);
+			}
 
-			if(!selecting && !moving && !resizing){
-				if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
-					if(rect.x < rect.handles.left[1]){
+			if(self.rangeContext){
+				if(!selecting && !moving && !resizing){
+					if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
+						if(rect.x < rect.handles.left[1]){
 
-						// left range handle is hovered, range is resizable
-						resizable = "left";
-						movable = false;
-						self.$rangeCanvas.css("cursor", "ew-resize");
+							// left range handle is hovered, range is resizable
+							resizable = "left";
+							movable = false;
+							self.$rangeCanvas.css("cursor", "ew-resize");
 
-					}else if(rect.x > rect.handles.right[0]){
+						}else if(rect.x > rect.handles.right[0]){
 
-						// right range handle is hovered, range is resizable
-						resizable = "right";
-						movable = false;
-						self.$rangeCanvas.css("cursor", "ew-resize");
+							// right range handle is hovered, range is resizable
+							resizable = "right";
+							movable = false;
+							self.$rangeCanvas.css("cursor", "ew-resize");
 
+						}else{
+
+							// range area is hovered, range is movable
+							resizable = false;
+							movable = true;
+							self.$rangeCanvas.css("cursor", "all-scroll");
+
+						}
 					}else{
 
-						// range area is hovered, range is movable
+						// range is not resizable or movable
 						resizable = false;
-						movable = true;
-						self.$rangeCanvas.css("cursor", "all-scroll");
+						movable = false;
+						self.$rangeCanvas.css({cursor: "default"});
 
 					}
-				}else{
-
-					// range is not resizable or movable
-					resizable = false;
-					movable = false;
-					self.$rangeCanvas.css({cursor: "default"});
-
 				}
 			}
 		}).mouseout(function(){
-			self.hideInfoBox();
+			if(self.config.info.show){
+				self.hideInfoBox();
+			}
 		})
 
 		// when selecting the range container, draw a box and send the range to the callback
-		self.$rangeCanvas.mousedown(function(e){
+		if(self.rangeContext){
+			self.$rangeCanvas.mousedown(function(e){
 
-			// prevent default action for click, including display of text selection mouse cursor
-			e.originalEvent.preventDefault();
+				// prevent default action for click, including display of text selection mouse cursor
+				e.originalEvent.preventDefault();
 
-			// reset rect object based on current range
-			defineRect();
+				// reset rect object based on current range
+				defineRect();
 
-			// add click location to rect object for move actions
-			rect.click = {
-				pos: e.offsetX,
-				from: rect.from,
-				to: rect.to
-			}
+				// add click location to rect object for move actions
+				rect.click = {
+					pos: e.offsetX,
+					from: rect.from,
+					to: rect.to
+				}
 
-			if(resizable){
+				if(resizable){
 
-				// resize range
-				self.$rangeCanvas.mousemove(function(e){
-					resizing = true;
+					// resize range
+					self.$rangeCanvas.mousemove(function(e){
+						resizing = true;
 
-					if(resizable === "left"){
-						rect.from = e.offsetX;
-					}else if(resizable === "right"){
-						rect.to = e.offsetX;
-					}
-					self.$rangeCanvas.css("cursor", "ew-resize");
-
-					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
-
-				}).mouseup(function(e){
-					resizing = false;
-
-					self.$rangeCanvas.unbind("mousemove");
-					self.$rangeCanvas.unbind("mouseup");
-
-					if(resizable){
-						self.returnRange();
-					}
-
-					self.$rangeCanvas.css({cursor: "default"});
-
-					selecting = false;
-					resizable = false;
-					movable = false;
-				})
-
-			}else if(movable){
-
-				// move range
-				self.$rangeCanvas.mousemove(function(e){
-					moving = true;
-					
-					rect.delta = rect.click.pos - rect.x;
-
-					// if new position is within canvas, redraw range, else set range to appropriate edge
-					if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.canvas.width){
-
-						rect.from = rect.click.from - rect.delta;
-						rect.to = rect.click.to - rect.delta;
-
-					}else{
-
-						// if range starts before left edge, push range to left edge
-						if((rect.click.from - rect.delta) <= 0){
-
-							rect.from = 0;
-							rect.to = rect.from + rect.width;
-
+						if(resizable === "left"){
+							rect.from = e.offsetX;
+						}else if(resizable === "right"){
+							rect.to = e.offsetX;
 						}
-
-						// if range ends after right edge, push range to right edge
-						if((rect.click.to - rect.delta) >= self.canvas.width){
-
-							rect.from = rect.to - rect.width;
-							rect.to = self.canvas.width;
-
-						}
-					}
-
-					self.$rangeCanvas.css("cursor", "all-scroll");
-
-					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
-
-				}).mouseup(function(e){
-					moving = false;
-
-					self.$rangeCanvas.unbind("mousemove");
-					self.$rangeCanvas.unbind("mouseup");
-
-					if(movable){
-						self.returnRange();
-					}
-
-					self.$rangeCanvas.css({cursor: "default"});
-
-					selecting = false;
-					resizable = false;
-					movable = false;
-
-				})
-
-			}else{
-
-				// select range
-				self.$rangeCanvas.mousemove(function(e){
-					e.originalEvent.preventDefault();
-
-					if(!selecting){
-						selecting = true;
-						rect.from = e.offsetX;
 						self.$rangeCanvas.css("cursor", "ew-resize");
-					}
-					rect.to = e.offsetX;
 
-					self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
-				}).mouseup(function(e){
-					rect.width = self.range.to.px - self.range.from.px;
+					}).mouseup(function(e){
+						resizing = false;
 
-					self.$rangeCanvas.unbind("mousemove");
-					self.$rangeCanvas.unbind("mouseup");
+						self.$rangeCanvas.unbind("mousemove");
+						self.$rangeCanvas.unbind("mouseup");
 
-					if(selecting){
-						self.returnRange();
-					}
+						if(resizable){
+							self.returnRange();
+						}
 
-					self.$rangeCanvas.css({cursor: "default"});
+						self.$rangeCanvas.css({cursor: "default"});
 
-					selecting = false;
-					resizable = false;
-					movable = false;
-				})
-			}
-		})
+						selecting = false;
+						resizable = false;
+						movable = false;
+					})
+
+				}else if(movable){
+
+					// move range
+					self.$rangeCanvas.mousemove(function(e){
+						moving = true;
+						
+						rect.delta = rect.click.pos - rect.x;
+
+						// if new position is within canvas, redraw range, else set range to appropriate edge
+						if((rect.click.from - rect.delta) > 0 && (rect.click.to - rect.delta) < self.canvas.width){
+
+							rect.from = rect.click.from - rect.delta;
+							rect.to = rect.click.to - rect.delta;
+
+						}else{
+
+							// if range starts before left edge, push range to left edge
+							if((rect.click.from - rect.delta) <= 0){
+
+								rect.from = 0;
+								rect.to = rect.from + rect.width;
+
+							}
+
+							// if range ends after right edge, push range to right edge
+							if((rect.click.to - rect.delta) >= self.canvas.width){
+
+								rect.from = rect.to - rect.width;
+								rect.to = self.canvas.width;
+
+							}
+						}
+
+						self.$rangeCanvas.css("cursor", "all-scroll");
+
+						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+					}).mouseup(function(e){
+						moving = false;
+
+						self.$rangeCanvas.unbind("mousemove");
+						self.$rangeCanvas.unbind("mouseup");
+
+						if(movable){
+							self.returnRange();
+						}
+
+						self.$rangeCanvas.css({cursor: "default"});
+
+						selecting = false;
+						resizable = false;
+						movable = false;
+
+					})
+
+				}else{
+
+					// select range
+					self.$rangeCanvas.mousemove(function(e){
+						e.originalEvent.preventDefault();
+
+						if(!selecting){
+							selecting = true;
+							rect.from = e.offsetX;
+							self.$rangeCanvas.css("cursor", "ew-resize");
+						}
+						rect.to = e.offsetX;
+
+						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+					}).mouseup(function(e){
+						rect.width = self.range.to.px - self.range.from.px;
+
+						self.$rangeCanvas.unbind("mousemove");
+						self.$rangeCanvas.unbind("mouseup");
+
+						if(selecting){
+							self.returnRange();
+						}
+
+						self.$rangeCanvas.css({cursor: "default"});
+
+						selecting = false;
+						resizable = false;
+						movable = false;
+					})
+				}
+			})
+		}
 
 	}
 
