@@ -58,6 +58,7 @@
 					"labelLeftWidth": 20, // width of vertical label div
 					"labelBottomTextSize": 12, // size of bottom label text
 					"labelBottomHeight": 20, // height of horizontal label div
+					"labelPadding": 5, // space between label and graph
 					"infoColor": "#EFEFEF", // background color of info box
 					"infoBorder": "#CCCCCC", // border color of info box
 					"infoTextSize": 10 // text size for info box
@@ -292,8 +293,8 @@
 			css = {
 				position: "absolute",
 				top: top + "px",
-				right: 2 + "px",
-				width: "100%",
+				right: self.config.style.labelPadding + "px",
+				width: self.config.style.labelLeftWidth - self.config.style.labelPadding + "px",
 				color: self.config.style.labelTextColor,
 				"text-align": "right",
 				"font-size": textHeight + "px",
@@ -328,8 +329,9 @@
 			css = {
 				position: "absolute",
 				left: left + "px",
-				top: 2 + "px",
+				top: self.config.style.labelPadding + "px",
 				width: widthInterval,
+				height: self.config.style.labelBottomHeight - self.config.style.labelPadding + "px",
 				color: self.config.style.labelTextColor,
 				"font-size": textHeight + "px",
 				"line-height": textHeight + "px",
