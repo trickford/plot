@@ -24,6 +24,9 @@
 					"yLabel": false, // y-axis label
 					"yCount": 3 // number of labels to display
 				},
+				"notations": {
+					"show": true
+				},
 				"info": {
 					"show": true, // show info overlay
 					"xaxis": "Time", // x-axis info description
@@ -59,7 +62,13 @@
 					"labelPadding": 5, // space between label and graph
 					"infoColor": "#EFEFEF", // background color of info box
 					"infoBorder": "#CCCCCC", // border color of info box
-					"infoTextSize": 10 // text size for info box
+					"infoTextSize": 10, // text size for info box
+					"notationSize": 8, // size of notation dot
+					"notationFillColor": "#FFFFFF", // color of notation dot
+					"notationBorderColor": "#108DC8", // color of notation border
+					"notationBorderWidth": 2, // width of notation border
+					"notationPopinBackground": "#FFFFFF", // background color of notation popin
+					"notationPopinColor": "#333333" // text color of notation popin
 				}
 			};
 
@@ -496,6 +505,7 @@
 		self.grid.units = Math.ceil(maxUnits * 1.1);
 		self.grid.unitHeight = self.canvas.height / self.grid.units;
 
+		// define points
 		for(var d = 0; d < self.data.length; d++){
 			var point = {
 				data: self.data[d],
@@ -504,11 +514,19 @@
 			}
 			points.push(point);
 
+			// grab notations if they exist
 			if(self.data[d][2]){
-				self.data[d][3] = [point.left, point.top];
+				self.data[d][2] = {
+					left: point.left,
+					top: point.top,
+					text: self.data[d][2]
+				};
+
 				notations.push(self.data[d]);
 			}
 		}
+
+		// store notations
 		if(notations.length){
 			self.notations = notations;
 		}
@@ -567,16 +585,29 @@
 			self.graphContext.fill();
 			self.graphContext.stroke();
 
+			// draw notations
 			if(self.notations){
 
 				for(var n = 0; n < self.notations.length; n++){
 					self.graphContext.beginPath();
-					self.graphContext.arc(self.notations[n][3][0], self.notations[n][3][1], 4, 0, 2 * Math.PI, false);
-					self.graphContext.fillStyle = 'white';
+
+					// set styles
+					self.graphContext.fillStyle = self.config.style.notationFillColor;
+					self.graphContext.strokeStyle = self.config.style.notationBorderColor;
+					self.graphContext.lineWidth = self.config.style.notationBorderWidth;
+
+					// define cirle lol math is hard
+					self.graphContext.arc(
+						self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth, // left position
+						self.notations[n][2].top - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth, // top position
+						self.config.style.notationSize / 2, // radius
+						0, // start angle
+						2 * Math.PI, false // end angle
+					);
+
+					// draw that shit
 					self.graphContext.fill();
-					self.graphContext.lineWidth = 2;
 					self.graphContext.stroke();
-					
 				}
 			}
 
