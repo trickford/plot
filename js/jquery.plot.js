@@ -21,10 +21,8 @@
 					"decimals": 1, // decimal points for left label if over 1000
 					"xLabel": false, // x-axis label
 					"xCount": 7, // number of labels to display
-					"xCustomLabels": false, // array of custom labels
 					"yLabel": false, // y-axis label
-					"yCount": 3, // number of labels to display
-					"yCustomLabels": false // array of custom labels
+					"yCount": 3 // number of labels to display
 				},
 				"info": {
 					"show": true, // show info overlay
@@ -243,33 +241,19 @@
 			xLabels = [];
 
 		// setup y labels
-		if(self.config.labels.yCustomLabels.length){
+		var yUnitSize = self.grid.units / (self.config.labels.yCount - 1);
 
-			yLabels = self.config.labels.yCustomLabels;
-
-		}else{
-			var yUnitSize = self.grid.units / (self.config.labels.yCount - 1);
-
-			for(var l = 0; l < self.config.labels.yCount; l++){
-				var label = Math.round(l * yUnitSize);
-				yLabels.push(self.processNumber(label));
-			}
-
-			yLabels.reverse();
+		for(var l = 0; l < self.config.labels.yCount; l++){
+			var label = Math.round(l * yUnitSize);
+			yLabels.push(self.processNumber(label));
 		}
 
+		yLabels.reverse();
+
 		// setup x labels
-		if(self.config.labels.xCustomLabels.length){
-
-			xLabels = self.config.labels.xCustomLabels;
-
-		}else{
-
-			for(var l = 0; l < self.config.labels.xCount; l++){
-				var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount));
-				xLabels.push(label[Math.round(label.length / 2)][0]);
-			}
-
+		for(var l = 0; l < self.config.labels.xCount; l++){
+			var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount));
+			xLabels.push(label[0][0]);
 		}
 
 		// create y labels
