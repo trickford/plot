@@ -207,7 +207,8 @@
 			G_vmlCanvasManager.initElement(self.$canvas[0]);
 		}
 		self.graphContext = self.$canvas[0].getContext("2d");
-		if(self.rangeContext){
+
+		if(self.config.range.show){
 			if(typeof G_vmlCanvasManager !== "undefined"){
 				G_vmlCanvasManager.initElement(self.$rangeCanvas[0]);
 			}
@@ -252,7 +253,26 @@
 
 		// setup x labels
 		for(var l = 0; l < self.config.labels.xCount; l++){
-			var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount))[0][0];
+			var label = self.data.slice(
+					Math.round(
+						self.data.length / (
+							self.config.labels.xCount / l
+						)
+					),
+					Math.round(
+						self.data.length / (
+							self.config.labels.xCount / l
+						)
+					) + Math.floor(
+					self.data.length / self.config.labels.xCount
+				))[0][0];
+
+			if(typeof label === "object"){
+				label = label.pretty;
+			}else{
+				label = label;
+			}
+
 			xLabels.push(label);
 		}
 
@@ -721,7 +741,7 @@
 
 		point = self.data[Math.round(rect.x / self.grid.unitWidth)] || self.data[0];
 
-		info = self.config.info.xaxis + ": " + point[0] + ", " + self.config.info.yaxis + ": " + point[1];
+		info = self.config.info.xaxis + ": " + point[0].pretty + ", " + self.config.info.yaxis + ": " + point[1];
 		
 		self.$info.html(info).show();
 	}
