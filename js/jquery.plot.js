@@ -252,8 +252,8 @@
 
 		// setup x labels
 		for(var l = 0; l < self.config.labels.xCount; l++){
-			var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount));
-			xLabels.push(label[0][0]);
+			var label = self.data.slice(Math.round(self.data.length / (self.config.labels.xCount / l)), Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount))[0][0];
+			xLabels.push(label);
 		}
 
 		// create y labels
