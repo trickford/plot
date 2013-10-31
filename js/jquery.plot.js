@@ -612,7 +612,8 @@
 								left: (self.config.labels.show) ? Math.round((self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth) + self.config.style.labelLeftWidth) : Math.round(self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth),
 								top: Math.round(self.notations[n][2].top - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth),
 								width: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2),
-								height: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2)
+								height: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2),
+								cursor: "pointer"
 							})
 							.data(dataAttr)
 							.attr("title", self.notations[n][2].text)
