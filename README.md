@@ -24,11 +24,11 @@ An array of points (arrays) to plot on the chart
 
 Each point should be an array containing 2-3 items, as follows:
 
-#index 0 (required): The label for the point. Either a number/string, or if desired, an object with "pretty" and "ugly" labels. The pretty label will be used for label display and info box text.
+- index 0 (required): The label for the point. Either a number/string, or if desired, an object with "pretty" and "ugly" labels. The pretty label will be used for label display and info box text.
 
-#index 1 (required): The data. Must be a number. Note the chart currently doesn't support numbers less than 0.
+- index 1 (required): The data. Must be a number. Note the chart currently doesn't support numbers less than 0.
 
-#index 3 (optional): The notation (line graph only). This will be a string of text that tells the plugin to show a dot on a data point of interest. Upon hovering the dot, the text passed will be displayed in a popin (TODO).
+- index 3 (optional): The notation (line graph only). This will be a string of text that tells the plugin to show a dot on a data point of interest. Upon hovering the dot, the text passed will be displayed in a popin (TODO).
 
 ###config
 A JSON object with the following parameters
