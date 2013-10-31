@@ -25,7 +25,11 @@
 					"yCount": 3 // number of labels to display
 				},
 				"notations": {
-					"show": true
+					"show": true,
+					"tooltips": {
+						"show": true,
+						"dataTag": "title"
+					}
 				},
 				"info": {
 					"show": true, // show info overlay
@@ -67,7 +71,10 @@
 					"notationFillColor": "#FFFFFF", // color of notation dot
 					"notationBorderColor": "#108DC8", // color of notation border
 					"notationBorderWidth": 2, // width of notation border
+					"notationPopinTextSize": 14, // size of text in notation popin
+					"notationPopinPadding": 10, // padding around text in notation popin
 					"notationPopinBackground": "#FFFFFF", // background color of notation popin
+					"notationPopinBorderColor": "#000000", // border color for notation popin
 					"notationPopinColor": "#333333" // text color of notation popin
 				}
 			};
@@ -586,9 +593,33 @@
 			self.graphContext.stroke();
 
 			// draw notations
-			if(self.notations){
+			if(self.config.notations.show && self.notations.length){
 
 				for(var n = 0; n < self.notations.length; n++){
+
+					// create notation hotspot
+					if(self.config.notations.tooltips.show){
+						// uses both title attribute and custom data attribute to send title to whatever tooltip plugin
+						var dataAttr = {
+							"notation-dataset": self.notations[n]
+						};
+
+						dataAttr[self.config.notations.tooltips["dataTag"]] = self.notations[n][2].text;
+
+						$("<span>").addClass("notation do-not-alter")
+							.css({
+								position: "absolute",
+								left: (self.config.labels.show) ? Math.round((self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth) + self.config.style.labelLeftWidth) : Math.round(self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth),
+								top: Math.round(self.notations[n][2].top - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth),
+								width: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2),
+								height: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2)
+							})
+							.data(dataAttr)
+							.attr("title", self.notations[n][2].text)
+							.appendTo(self.$el);
+					}
+
+					// draw dot!
 					self.graphContext.beginPath();
 
 					// set styles for max lolz
