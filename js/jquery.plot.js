@@ -591,15 +591,15 @@
 				for(var n = 0; n < self.notations.length; n++){
 					self.graphContext.beginPath();
 
-					// set styles
+					// set styles for max lolz
 					self.graphContext.fillStyle = self.config.style.notationFillColor;
 					self.graphContext.strokeStyle = self.config.style.notationBorderColor;
 					self.graphContext.lineWidth = self.config.style.notationBorderWidth;
 
-					// define cirle lol math is hard
+					// define cirle haha math is hard
 					self.graphContext.arc(
-						self.notations[n][2].left - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth, // left position
-						self.notations[n][2].top - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth, // top position
+						self.notations[n][2].left, // left position
+						self.notations[n][2].top, // top position
 						self.config.style.notationSize / 2, // radius
 						0, // start angle
 						2 * Math.PI, false // end angle
@@ -702,8 +702,8 @@
 		self.range.from.px = Math.round(position.left);
 		self.range.to.px = Math.round(position.width) + self.range.from.px;
 
-		self.range.from.index = Math.round(self.range.from.px / self.grid.unitWidth);
-		self.range.to.index = Math.round(self.range.to.px / self.grid.unitWidth);
+		self.range.from.index = self.getIndex(self.range.from.px, self.grid.unitWidth);
+		self.range.to.index = self.getIndex(self.range.to.px, self.grid.unitWidth);
 
 		self.range.from.data = self.data[self.range.from.index];
 		self.range.to.data = self.data[self.range.to.index];
@@ -768,11 +768,12 @@
 
 	Plot.prototype.updateInfoBox = function(rect){
 		var self = this,
+			index = self.getIndex(rect.x, self.grid.unitWidth),
 			info, pos;
 
-		point = self.data[Math.round(rect.x / self.grid.unitWidth)] || self.data[0];
+		point = self.data[index] || self.data[0];
 
-		info = self.config.info.xaxis + ": " + point[0].pretty + ", " + self.config.info.yaxis + ": " + point[1];
+		info = self.config.info.xaxis + ": " + ((typeof label === "object") ? point[0] : point[0].pretty) + ", " + self.config.info.yaxis + ": " + point[1];
 		
 		self.$info.html(info).show();
 	}
@@ -781,6 +782,20 @@
 		var self = this;
 
 		self.$info.hide();
+	}
+
+	Plot.prototype.getIndex = function(pos, unitWidth){
+		var self = this,
+			index;
+
+		// determine which index is hovered
+		if(self.config.type === "bar"){
+			index = parseInt(pos / unitWidth);
+		}else{
+			index = Math.round(pos / unitWidth);
+		}
+
+		return index;
 	}
 
 	Plot.prototype.updateRange = function(){
