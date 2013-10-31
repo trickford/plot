@@ -11,22 +11,24 @@ Implementation and configuration options may change with each release. Please do
 
 ###data
 
-An array of points to plot on the chart
+An array of points (arrays) to plot on the chart
 
     [  
         [0, 3],  
         [1, 1],  
-        [2, 0],  
+        [{pretty: "two", ugly: 2}, 0],  
         [3, 6],  
-        [4, 5],  
+        [4, 5, "notation"],  
         [5, 3]  
     ]
 
-Currently the chart iterates through each data point and ignores the first item in each array, so a 0 data point would need to be passed for zero.  
+Each point should be an array containing 2-3 items, as follows:
 
-ex: `[2, 0]` is the third data point, where 2 is ignored and 0 is how many things.
+#index 0 (required): The label for the point. Either a number/string, or if desired, an object with "pretty" and "ugly" labels. The pretty label will be used for label display and info box text.
 
-This will be updated in the future to build the chart based on the first item in each data point, and passing zeros will be optional.
+#index 1 (required): The data. Must be a number. Note the chart currently doesn't support numbers less than 0.
+
+#index 3 (optional): The notation (line graph only). This will be a string of text that tells the plugin to show a dot on a data point of interest. Upon hovering the dot, the text passed will be displayed in a popin (TODO).
 
 ###config
 A JSON object with the following parameters
@@ -36,33 +38,46 @@ A JSON object with the following parameters
         "height": 300, // height of canvas
         "type": "bar", // "bar" or "line"
         "range": {
-            "show": true, // show range selection
+            "show": true // show range selection
         },
         "grid": {
             "show": true, // show grid
-            "interval": 10 // how many points between grid lines
+            "interval": 10, // how many data points between vertical grid lines
+            "xSize": 1,
+            "ySize": 1
         },
         "labels": {
             "show": true, // show labels
-            "xaxis": "time", // x-axis label
-            "yaxis": "count" // y-axis label
+            "decimals": 1, // decimal points for left label if over 1000
+            "xLabel": false, // x-axis label
+            "xCount": 7, // number of labels to display
+            "yLabel": false, // y-axis label
+            "yCount": 3 // number of labels to display
+        },
+        "notations": {
+            "show": true
         },
         "info": {
             "show": true, // show info overlay
-            "x": "Time", // x-axis info description
-            "y": "TPM" // y-axis into description
+            "xaxis": "Time", // x-axis info description
+            "yaxis": "TPM" // y-axis into description
         },
         "classes": {
+            "bg": "bg", // class for graph canvas
             "graph": "graph", // class for graph canvas
             "range": "range", // class for range canvas
             "label": "label", // class for label divs
             "info": "info" // class for info div
         },
         "style": {
-            "border": "#CCCCCC", // border around canvas
+            "borderColor": "#CCCCCC", // border around canvas
+            "fillImage": false, // URL for chart background image
             "barColor": "#FF9900", // color of bars in bar graph
             "barPadding": 2, // padding between bars in bar graph
-            "lineColor": "#FF9900", // color of line in line graph
+            "lineColor": "#108DC8", // color of line in line graph
+            "lineWidth": 2, // width of line in line graph
+            "lineFillColor": "#FFFFFF", // chart fill color
+            "lineFillImage": false, // URL for chart fill image, overrides lineFillColor
             "rangeColor": "#E5E5E5", // color of range selection
             "rangeOpacity": 0.5, // opacity of range in range selection
             "handleColor": "#868695", // color of range handles
@@ -70,17 +85,25 @@ A JSON object with the following parameters
             "handleWidth": 10, // width of range handles if no image set
             "handleHeight": 40, // height of range handles if no image set
             "gridColor": "#F0F0F0", // color or grid lines
-            "labelTextSize": 14, // size of label text
-            "labelLeftWidth": 30, // width of vertical label div
-            "labelBottomHeight": 30, // height of horizontal label div
+            "labelLeftTextSize": 12, // size of left label text
+            "labelLeftWidth": 20, // width of vertical label div
+            "labelBottomTextSize": 12, // size of bottom label text
+            "labelBottomHeight": 20, // height of horizontal label div
+            "labelPadding": 5, // space between label and graph
             "infoColor": "#EFEFEF", // background color of info box
             "infoBorder": "#CCCCCC", // border color of info box
-            "infoTextSize": 10 // text size for info box
+            "infoTextSize": 10, // text size for info box
+            "notationSize": 8, // size of notation dot
+            "notationFillColor": "#FFFFFF", // color of notation dot
+            "notationBorderColor": "#108DC8", // color of notation border
+            "notationBorderWidth": 2, // width of notation border
+            "notationPopinBackground": "#FFFFFF", // background color of notation popin
+            "notationPopinColor": "#333333" // text color of notation popin
         }
     }
 
 ###callback
-A function with one parameter (data) to call when a range has been selected on the chart
+A function with one parameter (data) to call when a range has been selected on the chart. This will return the data point exactly as it is passed into the plugin.
 
     function(data){
         console.log(data);
