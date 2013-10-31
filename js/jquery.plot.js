@@ -773,7 +773,7 @@
 
 		point = self.data[index] || self.data[0];
 
-		info = self.config.info.xaxis + ": " + ((typeof label === "object") ? point[0] : point[0].pretty) + ", " + self.config.info.yaxis + ": " + point[1];
+		info = self.config.info.xaxis + ": " + ((typeof point[0] === "object") ? point[0].pretty : point[0]) + ", " + self.config.info.yaxis + ": " + point[1];
 		
 		self.$info.html(info).show();
 	}
