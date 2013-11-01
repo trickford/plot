@@ -1117,7 +1117,7 @@
 
 	$.fn.plot = function(data, config, callback){
 		var plot = new Plot(this, data, config, callback);
-		return plot;
+		return this;
 	}
 
 })(jQuery);
