@@ -1,6 +1,6 @@
 (function($) {
 
-	function Plot(elem, data, config, callback){
+	function Plot(elem, data, config, completeCallback, rangeCallback){
 
 		var self = this,
 			defaults = {
@@ -82,7 +82,8 @@
 		self.config = $.extend(true, {}, defaults, config);
 		self.data = data;
 		self.$el = $(elem);
-		self.callback = callback;
+		self.completeCallback = completeCallback;
+		self.rangeCallback = rangeCallback;
 		self.grid = {};
 		self.range = self.$el.data("range") || {
 			from: {},
@@ -426,12 +427,26 @@
 		self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 	}
 
+	Plot.prototype.clearNotations = function(){
+		var self = this;
+
+		self.$el.find(".notation").remove();
+	}
+
 	Plot.prototype.drawBackground = function(){
 		var self = this;
 
 		self.$bg.css({
 			"background": "url(" + self.config.style.fillImage + ") repeat 0 0"
 		})
+	}
+
+	Plot.prototype.completed = function(){
+		var self = this;
+
+		if(typeof self.completeCallback === "function"){
+			self.completeCallback();
+		}
 	}
 
 	Plot.prototype.drawBarGraph = function(){
@@ -489,6 +504,8 @@
 		self.updateRange();
 
 		self.$el.data("data",self.data);
+
+		self.completed();
 	}
 
 	Plot.prototype.drawLineGraph = function(){
@@ -594,6 +611,7 @@
 
 			// draw notations
 			if(self.config.notations.show && self.notations.length){
+				self.clearNotations();
 
 				for(var n = 0; n < self.notations.length; n++){
 
@@ -613,7 +631,8 @@
 								top: Math.round(self.notations[n][2].top - (self.config.style.notationSize / 2) - self.config.style.notationBorderWidth),
 								width: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2),
 								height: self.config.style.notationSize + (self.config.style.notationBorderWidth * 2),
-								cursor: "pointer"
+								cursor: "pointer",
+								"border-radius": "100%"
 							})
 							.data(dataAttr)
 							.attr("title", self.notations[n][2].text)
@@ -643,6 +662,8 @@
 				}
 			}
 
+			self.completed();
+
 		};
 
 		// draw chart
@@ -659,7 +680,9 @@
 			}
 
 		}else{
+
 			drawChart();
+
 		}
 
 		self.updateRange();
@@ -881,8 +904,8 @@
 	Plot.prototype.returnRange = function(){
 		var self = this;
 
-		if(typeof self.callback === "function"){
-			self.callback({from: self.range.from.data, to: self.range.to.data});
+		if(typeof self.rangeCallback === "function"){
+			self.rangeCallback({from: self.range.from.data, to: self.range.to.data});
 		}
 		self.$el.data("range", self.range);
 	}
@@ -1115,8 +1138,8 @@
 
 	}
 
-	$.fn.plot = function(data, config, callback){
-		var plot = new Plot(this, data, config, callback);
+	$.fn.plot = function(data, config, completeCallback, rangeCallback){
+		var plot = new Plot(this, data, config, completeCallback, rangeCallback);
 		return this;
 	}
 
