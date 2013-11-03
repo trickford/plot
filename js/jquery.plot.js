@@ -645,7 +645,10 @@
 					// set styles for max lolz
 					self.graphContext.fillStyle = self.config.style.notationFillColor;
 					self.graphContext.strokeStyle = self.config.style.notationBorderColor;
-					self.graphContext.lineWidth = self.config.style.notationBorderWidth;
+
+					// lineWidth draws at half the defined size on arcs for some stupid fucking reason, so double it
+					// #thanksobama
+					self.graphContext.lineWidth = self.config.style.notationBorderWidth * 2;
 
 					// define cirle haha math is hard
 					self.graphContext.arc(
@@ -653,7 +656,8 @@
 						self.notations[n][2].top, // top position
 						self.config.style.notationSize / 2, // radius
 						0, // start angle
-						2 * Math.PI, false // end angle
+						2 * Math.PI, // end angle
+						false // counter clockwise or something, i don't even know this doesn't make any sense
 					);
 
 					// draw that shit
