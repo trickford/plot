@@ -12,9 +12,12 @@
 				},
 				"grid": {
 					"show": true, // show grid
-					"interval": 10, // how many data points between vertical grid lines
-					"xSize": 1,
-					"ySize": 1
+					"xCount": 3, // set custom amount of horizontal grid lines
+					"yCount": 10, // set custom amount of vertical grid lines
+					"xInterval": false, // how many data points between horizontal grid lines, overrides xCount
+					"yInterval": false, // how many data points between vertical grid lines, overrides yCount
+					"xSize": 1, // size of horizontal grid line
+					"ySize": 1 // size of vertical grid line
 				},
 				"labels": {
 					"show": true, // show labels
@@ -25,10 +28,10 @@
 					"yCount": 3 // number of labels to display
 				},
 				"notations": {
-					"show": true,
+					"show": true, // show notations
 					"tooltips": {
-						"show": true,
-						"dataTag": "title"
+						"show": true, // draw notation tooltip hotspots
+						"dataTag": "title" // custom data tag to use for tooltips
 					}
 				},
 				"info": {
@@ -443,7 +446,7 @@
 		}else if(self.config.style.fillColor){
 			css.background = self.config.style.fillColor;
 		}
-		
+
 		self.$bg.css(css);
 	}
 
@@ -712,13 +715,26 @@
 		self.graphContext.lineWidth = self.config.grid.ySize;
 
 		if(self.config.grid.ySize > 0){
-			for(var i = 0; i < (self.data.length / self.config.grid.interval); i++){
+			if(self.config.grid.yInterval){
+				for(var i = 0; i < (self.data.length / self.config.grid.yInterval); i++){
 
-				if(i > 0){
-					self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.interval), 0);
-					self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.interval), self.canvas.height);
+					if(i > 0){
+						self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval), 0);
+						self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval), self.canvas.height);
+					}
+
 				}
+			}else{
+				var yLineInterval = self.$canvas.width() / (self.config.grid.yCount + 1);
 
+				for(var i = 0; i < self.config.grid.yCount + 1; i++){
+
+					if(i > 0){
+						self.graphContext.moveTo(Math.ceil(i * yLineInterval), 0);
+						self.graphContext.lineTo(Math.ceil(i * yLineInterval), self.canvas.height);
+					}
+
+				}
 			}
 		}
 
@@ -726,13 +742,26 @@
 		self.graphContext.lineWidth = self.config.grid.xSize;
 
 		if(self.config.grid.xSize > 0){
-			for(var i = 0; i < self.grid.units; i++){
+			if(self.config.grid.xInterval){
+				for(var i = 0; i < (self.grid.units / self.config.grid.xInterval); i++){
 
-				if(i > 0){
-					self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight));
-					self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight));
+					if(i > 0){
+						self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval));
+						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval));
+					}
+
 				}
+			}else{
+				var xLineInterval = self.$canvas.height() / (self.config.grid.xCount + 1);
 
+				for(var i = 0; i < self.config.grid.xCount + 1; i++){
+
+					if(i > 0){
+						self.graphContext.moveTo(0, Math.ceil(i * xLineInterval));
+						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * xLineInterval));
+					}
+
+				}
 			}
 		}
 
