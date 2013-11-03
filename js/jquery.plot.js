@@ -46,6 +46,7 @@
 				"style": {
 					"borderColor": "#CCCCCC", // border around canvas
 					"fillImage": false, // URL for chart background image
+					"fillColor": false, // color of chart background
 					"barColor": "#FF9900", // color of bars in bar graph
 					"barPadding": 2, // padding between bars in bar graph
 					"lineColor": "#108DC8", // color of line in line graph
@@ -119,7 +120,7 @@
 
 		self.rangeEvents();
 
-		if(self.config.style.fillImage){
+		if(self.config.style.fillImage || self.config.style.fillColor){
 			self.drawBackground();
 		}
 
@@ -434,11 +435,16 @@
 	}
 
 	Plot.prototype.drawBackground = function(){
-		var self = this;
+		var self = this
+			css = {};
 
-		self.$bg.css({
-			"background": "url(" + self.config.style.fillImage + ") repeat 0 0"
-		})
+		if(self.config.style.fillImage){
+			css.background = "url(" + self.config.style.fillImage + ") repeat 0 0";
+		}else if(self.config.style.fillColor){
+			css.background = self.config.style.fillColor;
+		}
+		
+		self.$bg.css(css);
 	}
 
 	Plot.prototype.completed = function(){
