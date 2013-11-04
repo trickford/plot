@@ -991,6 +991,26 @@
 			rect.x = e.offsetX;
 			rect.y = e.offsetY;
 
+			// so jQuery mousemove returns cursor offsetX and offsetY of child elements, not the element you actually selected...
+			// for divs and spans, fix the cursor position calculation
+			if($(e.target).is("div, span")){
+				var position = $(e.target).position(),
+					width = $(e.target).width();
+
+				rect.x = (self.config.style.labelLeftWidth) ? rect.x + position.left - self.config.style.labelLeftWidth : rect.x + position.left;
+				rect.y = rect.y + position.top;
+			}
+			
+			// if notation is hovered, set cursor position to the middle of the dot so the info box shows the notation data
+			if($(e.target).is(".notation")){
+				var position = $(e.target).position(),
+					width = $(e.target).width(),
+					height = $(e.target).height();
+
+				rect.x = (self.config.style.labelLeftWidth) ? position.left + (width / 2) - self.config.style.labelLeftWidth : position.left + (width / 2);
+				rect.y = position.top + (height / 2);
+			}
+
 			if(self.config.info.show){
 				self.updateInfoBox(rect);
 			}
