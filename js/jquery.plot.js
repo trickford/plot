@@ -968,9 +968,9 @@
 			defineRect = function(){
 				// define rect object based on current range
 				rect = {
-					from: self.range.from.px,
-					to: self.range.to.px,
-					width: self.range.to.px - self.range.from.px,
+					from: self.range.from.px || null,
+					to: self.range.to.px || null,
+					width: self.range.to.px - self.range.from.px || null,
 					handles: self.range.handles
 				}
 			};
