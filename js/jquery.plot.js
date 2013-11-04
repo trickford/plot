@@ -274,19 +274,12 @@
 
 		// setup x labels
 		for(var l = 0; l < self.config.labels.xCount; l++){
-			var label = self.data.slice(
-					Math.round(
-						self.data.length / (
-							self.config.labels.xCount / l
-						)
-					),
-					Math.round(
-						self.data.length / (
-							self.config.labels.xCount / l
-						)
-					) + Math.floor(
-					self.data.length / self.config.labels.xCount
-				))[0][0];
+			var section = [
+					Math.round(self.data.length / (self.config.labels.xCount / l)),
+					Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount)
+				],
+				middle = Math.floor((section[1] - section[0]) / 2),
+				label = self.data.slice(section[0], section[1])[middle][0];
 
 			if(typeof label === "object"){
 				label = label.pretty;
@@ -339,24 +332,26 @@
 				textHeight = self.config.style.labelBottomTextSize,
 				widthInterval, left, width, align, css;
 
-			if(self.config.type === "line"){
+			// TODO - update label logic 'cause you done fucked it up
 
-				widthInterval = Math.floor(containerWidth / (labelCount - 1));
-				if(x === 0){
-					left = 0;
-					align = "left";
-					width = widthInterval / 2;
-				}else if(x === labelCount - 1){
-					left = (containerWidth - (containerWidth / (labelCount - 1))) + (widthInterval / 2);
-					width = widthInterval / 2;
-					align = "right";
-				}else{
-					left = (containerWidth / (labelCount - 1)) * (x - 1) + (widthInterval / 2);
-					align = "center";
-					width = widthInterval;
-				}
+			// if(self.config.type === "line"){
+
+			// 	widthInterval = Math.floor(containerWidth / (labelCount - 1));
+			// 	if(x === 0){
+			// 		left = 0;
+			// 		align = "left";
+			// 		width = widthInterval / 2;
+			// 	}else if(x === labelCount - 1){
+			// 		left = (containerWidth - (containerWidth / (labelCount - 1))) + (widthInterval / 2);
+			// 		width = widthInterval / 2;
+			// 		align = "right";
+			// 	}else{
+			// 		left = (containerWidth / (labelCount - 1)) * (x - 1) + (widthInterval / 2);
+			// 		align = "center";
+			// 		width = widthInterval;
+			// 	}
 				
-			}else{
+			// }else{
 
 				widthInterval = Math.floor(containerWidth / labelCount);
 				if(x === 0){
@@ -373,7 +368,7 @@
 					width = widthInterval;
 				}
 
-			}
+			//}
 
 			css = {
 				position: "absolute",
