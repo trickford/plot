@@ -460,7 +460,7 @@
 
 	Plot.prototype.drawBarGraph = function(){
 		var self = this,
-			maxUnits, minUnits, unitWidth, unitHeight;
+			maxUnits, minUnits, unitWidth, unitHeight, lastBarEndpoint;
 
 		// get data min/max
 		for(var i = 0; i < self.data.length; i++){
@@ -485,18 +485,24 @@
 		}
 
 		for(var i = 0; i < self.data.length; i++){
-			var dataPoint = self.data[i][1],
-				nextPoint;
-
-			if(typeof self.data[i+1] !== "undefined"){
-				nextPoint = self.data[i+1][1];
-			}
+			var dataPoint = self.data[i][1];
 
 			var position = {
-					height: dataPoint * unitHeight,
-					width: unitWidth - self.config.style.barPadding / 2,
-					left: (unitWidth * i) + self.config.style.barPadding / 2
+					height: Math.ceil(dataPoint * unitHeight),
+					width: Math.round(unitWidth - self.config.style.barPadding),
+					left: Math.round((unitWidth * i) + self.config.style.barPadding)
 				}
+
+			if(lastBarEndpoint && position.left > (lastBarEndpoint + self.config.style.barPadding)){
+				var delta = position.left - (lastBarEndpoint + self.config.style.barPadding);
+				
+				if(delta > 0){
+					position.left = lastBarEndpoint + self.config.style.barPadding;
+					position.width += delta;
+				}
+			}
+
+			lastBarEndpoint = position.left + position.width;
 
 			self.graphContext.fillStyle = self.config.style.barColor;
 
