@@ -490,7 +490,7 @@
 			var position = {
 					height: Math.ceil(dataPoint * unitHeight),
 					width: Math.round(unitWidth - self.config.style.barPadding),
-					left: Math.round((unitWidth * i) + self.config.style.barPadding)
+					left: (i === 0) ? Math.round(unitWidth * i) : Math.round((unitWidth * i) + self.config.style.barPadding)
 				}
 
 			if(lastBarEndpoint && position.left > (lastBarEndpoint + self.config.style.barPadding)){
