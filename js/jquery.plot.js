@@ -551,8 +551,8 @@
 			// grab notations if they exist
 			if(self.data[d][2]){
 				self.data[d][2] = {
-					left: point.left,
-					top: point.top,
+					left: Math.round(point.left),
+					top: Math.round(point.top),
 					text: self.data[d][2]
 				};
 
