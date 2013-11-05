@@ -92,6 +92,7 @@
 		self.completeCallback = completeCallback;
 		self.rangeCallback = rangeCallback;
 		self.grid = {};
+		self.notations = [];
 
 		// if range not previously selected, create new range object
 		// TODO - maybe just always start with empty range, persisting is a pain in the ass and may not even be useful
