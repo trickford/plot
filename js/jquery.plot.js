@@ -83,12 +83,18 @@
 				}
 			};
 
+		// mash config with defaults
 		self.config = $.extend(true, {}, defaults, config);
+
+		// begin assigning stuff
 		self.data = data;
 		self.$el = $(elem);
 		self.completeCallback = completeCallback;
 		self.rangeCallback = rangeCallback;
 		self.grid = {};
+
+		// if range not previously selected, create new range object
+		// TODO - maybe just always start with empty range, persisting is a pain in the ass and may not even be useful
 		self.range = self.$el.data("range") || {
 			from: {},
 			to: {},
@@ -97,6 +103,8 @@
 				right: {}
 			}
 		};
+
+		// set canvas size (used for all canvases and the background div)
 		self.canvas = {
 			position: "absolute",
 			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - (self.config.style.borderColor ? 2 : 0) : self.config.width - (self.config.style.borderColor ? 2 : 0),
@@ -108,6 +116,7 @@
 
 		self.defineElements();
 
+		// if elements exist, clear them, otherwise create them
 		if(self.$canvas.length){
 			self.clearGraph();
 			if(self.config.labels.show){
@@ -117,26 +126,32 @@
 			self.createElements();
 		}
 
+		// load range handle images if that's what you want
 		if(self.config.style.handleImage){
 			self.loadRangeImage();
 		}
 
+		// all that mousemove, mouseover, mouseout shit that makes this plugin better than yours
 		self.rangeEvents();
 
+		// set graph background if that's what you want
 		if(self.config.style.fillImage || self.config.style.fillColor){
 			self.drawBackground();
 		}
 
+		// draw that shit
 		if(self.config.type === "bar"){
 			self.drawBarGraph();
 		}else if(self.config.type === "line"){
 			self.drawLineGraph();
 		}
 
+		// setup labels if that's what you want
 		if(self.config.labels.show){
 			self.createLabels();
 		}
 
+		// return to jQuery chain
 		return this;
 
 	}
@@ -224,15 +239,19 @@
 
 		self.defineElements();
 
+		// if you're all about that excanvas IE8 shit, initialize it
 		if(typeof G_vmlCanvasManager !== "undefined"){
 			G_vmlCanvasManager.initElement(self.$canvas[0]);
 		}
+		// get context
 		self.graphContext = self.$canvas[0].getContext("2d");
 
 		if(self.config.range.show){
+			// if you're all about that excanvas IE8 shit, initialize it
 			if(typeof G_vmlCanvasManager !== "undefined"){
 				G_vmlCanvasManager.initElement(self.$rangeCanvas[0]);
 			}
+			// get context
 			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
 		}
 	}
@@ -240,6 +259,7 @@
 	Plot.prototype.defineElements = function(){
 		var self = this;
 
+		// throw existing elements to instance
 		self.$bg = self.$el.find("div." + self.config.classes.bg);
 
 		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
@@ -274,6 +294,7 @@
 
 		// setup x labels
 		for(var l = 0; l < self.config.labels.xCount; l++){
+			// determine what labels to show
 			var section = [
 					Math.round(self.data.length / (self.config.labels.xCount / l)),
 					Math.round(self.data.length / (self.config.labels.xCount / l)) + Math.floor(self.data.length / self.config.labels.xCount)
@@ -281,6 +302,7 @@
 				middle = Math.floor((section[1] - section[0]) / 2),
 				label = self.data.slice(section[0], section[1])[middle][0];
 
+			// show pretty labels if they exist
 			if(typeof label === "object"){
 				label = label.pretty;
 			}else{
@@ -370,6 +392,7 @@
 
 			//}
 
+			// set location and styles of lables
 			css = {
 				position: "absolute",
 				left: left + "px",
@@ -398,6 +421,7 @@
 	Plot.prototype.processNumber = function(number){
 		var self = this;
 
+		// turn large numbers into pretty ones for the y labels
 		if(number > 999 && number < 1000000){
 			var newNumber = (number / 1000).toFixed(self.config.labels.decimals) + "k";
 
@@ -436,6 +460,7 @@
 		var self = this
 			css = {};
 
+		// set background image or color if that's what you want
 		if(self.config.style.fillImage){
 			css.background = "url(" + self.config.style.fillImage + ") repeat 0 0";
 		}else if(self.config.style.fillColor){
@@ -448,6 +473,7 @@
 	Plot.prototype.completed = function(){
 		var self = this;
 
+		// done drawing, throw to callback so you can do stuff to the complete graph
 		if(typeof self.completeCallback === "function"){
 			self.completeCallback();
 		}
@@ -479,15 +505,18 @@
 			self.drawGrid();
 		}
 
+		// figure out hard stuff
 		for(var i = 0; i < self.data.length; i++){
 			var dataPoint = self.data[i][1];
 
+			// set position of bar and round to nearest full pixel to avoid weird canvas half pixel aliasing bullshit
 			var position = {
 					height: Math.ceil(dataPoint * unitHeight),
 					width: Math.round(unitWidth - self.config.style.barPadding),
 					left: (i === 0) ? Math.round(unitWidth * i) : Math.round((unitWidth * i) + self.config.style.barPadding)
 				}
 
+			// space bars evenly to avoid weird spacing
 			if(lastBarEndpoint && position.left > (lastBarEndpoint + self.config.style.barPadding)){
 				var delta = position.left - (lastBarEndpoint + self.config.style.barPadding);
 				
@@ -499,8 +528,10 @@
 
 			lastBarEndpoint = position.left + position.width;
 
+			// set styles
 			self.graphContext.fillStyle = self.config.style.barColor;
 
+			// draw that shit
 			if(dataPoint > 0){
 				self.graphContext.fillRect(
 					position.left,
@@ -511,10 +542,13 @@
 			}
 		}
 
+		// update range selector
 		self.updateRange();
 
+		// throw dataset to DOM for use later
 		self.$el.data("data",self.data);
 
+		// we done
 		self.completed();
 	}
 
@@ -577,6 +611,15 @@
 			self.graphContext.lineJoin = "round";
 			self.graphContext.strokeStyle = self.config.style.lineColor;
 
+			// set line fill
+			if(self.config.style.lineFillColor){
+				self.graphContext.fillStyle = self.config.style.lineFillColor;
+			}
+			// lineFillImage overrides lineFillColor (i mean why not right?)
+			if(self.config.style.lineFillImage){
+				self.graphContext.fillStyle = self.graphContext.createPattern(image, "repeat-x");
+			}
+
 			// begin drawing line
 			self.graphContext.beginPath();
 
@@ -607,15 +650,7 @@
 			// finish drawing line
 			self.graphContext.closePath();
 
-			if(self.config.style.lineFillColor){
-				self.graphContext.fillStyle = self.config.style.lineFillColor;
-			}
-
-			// lineFillImage overrides lineFillColor
-			if(self.config.style.lineFillImage){
-				self.graphContext.fillStyle = self.graphContext.createPattern(image, "repeat-x");
-			}
-
+			// draw that shit
 			self.graphContext.fill();
 			self.graphContext.stroke();
 
@@ -632,8 +667,10 @@
 							"notation-dataset": self.notations[n]
 						};
 
+						// add full data point to hotspot for any use case
 						dataAttr[self.config.notations.tooltips["dataTag"]] = self.notations[n][2].text;
 
+						// set hotspot style and attributes and throw to DOM
 						$("<span>").addClass("notation do-not-alter")
 							.css({
 								position: "absolute",
@@ -676,6 +713,7 @@
 				}
 			}
 
+			// we done
 			self.completed();
 
 		};
@@ -699,23 +737,28 @@
 
 		}
 
+		// update range selector
 		self.updateRange();
 
+		// throw dataset to DOM for use later
 		self.$el.data("data",self.data);
 
 	}
 
 	Plot.prototype.drawGrid = function(){
-
 		var self = this;
 
+		// start drawing grid
 		self.graphContext.beginPath();
+
+		// set styles
 		self.graphContext.strokeStyle = self.config.style.gridColor;
 
-		// draw vertical lines
+		// define vertical lines
 		self.graphContext.lineWidth = self.config.grid.ySize;
 
 		if(self.config.grid.ySize > 0){
+			// do some complicated shit
 			if(self.config.grid.yInterval){
 				for(var i = 0; i < (self.data.length / self.config.grid.yInterval); i++){
 
@@ -739,10 +782,11 @@
 			}
 		}
 
-		// draw horizontal lines
+		// define horizontal lines
 		self.graphContext.lineWidth = self.config.grid.xSize;
 
 		if(self.config.grid.xSize > 0){
+			// do some complicated shit
 			if(self.config.grid.xInterval){
 				for(var i = 0; i < (self.grid.units / self.config.grid.xInterval); i++){
 
@@ -766,6 +810,7 @@
 			}
 		}
 
+		// draw that shit
 		self.graphContext.stroke();
 
 	}
