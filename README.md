@@ -28,7 +28,7 @@ Each point should be an array containing 2-3 items, as follows:
 
 - index 1 (required): The data. Must be a number. Note the chart currently doesn't support numbers less than 0.
 
-- index 3 (optional): The notation (line graph only). This will be a string of text that tells the plugin to show a dot on a data point of interest. Upon hovering the dot, the text passed will be displayed in a popin (TODO).
+- index 2 (optional): The notation (line graph only). This will be a string of text that tells the plugin to show a dot on a data point of interest. Upon hovering the dot, the text passed will be displayed in a popin (TODO).
 
 ###config
 A JSON object with the following parameters
