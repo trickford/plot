@@ -63,6 +63,8 @@
 					"handleWidth": 10, // width of range handles if no image set
 					"handleHeight": 40, // height of range handles if no image set
 					"gridColor": "#F0F0F0", // color or grid lines
+					"gridLineStyleX": "solid", // grid horizontal line style (solid, dotted, dashed)
+					"gridLineStyleY": "solid", // grid vertical line style (solid, dotted, dashed)
 					"labelLeftTextSize": 12, // size of left label text
 					"labelLeftWidth": 20, // width of vertical label div
 					"labelBottomTextSize": 12, // size of bottom label text
@@ -749,14 +751,23 @@
 	Plot.prototype.drawGrid = function(){
 		var self = this;
 
-		// start drawing grid
+		// canvas draws lines in the dumbest fucking way imaginable - between pixels, causing funky alisaing to happen
+		// fix by offsetting lines by half a pixel to tell the canvas to draw between pixels which actually makes it draw on a full pixel which makes my brain hurt
+		// whiskey.
+		var lineOffset = 0.5;
+
+		// start drawing vertical grid lines
 		self.graphContext.beginPath();
 
 		// set styles
 		self.graphContext.strokeStyle = self.config.style.gridColor;
-
-		// define vertical lines
 		self.graphContext.lineWidth = self.config.grid.ySize;
+
+		if(self.config.style.gridLineStyleY === "dotted"){
+			self.graphContext.setLineDash([2,2]);
+		}else if(self.config.style.gridLineStyleY === "dashed"){
+			self.graphContext.setLineDash([3,6]);
+		}
 
 		if(self.config.grid.ySize > 0){
 			// do some complicated shit
@@ -764,8 +775,8 @@
 				for(var i = 0; i < (self.data.length / self.config.grid.yInterval); i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval), 0);
-						self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval), self.canvas.height);
+						self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, 0);
+						self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, self.canvas.height);
 					}
 
 				}
@@ -775,16 +786,32 @@
 				for(var i = 0; i < self.config.grid.yCount + 1; i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(Math.ceil(i * yLineInterval), 0);
-						self.graphContext.lineTo(Math.ceil(i * yLineInterval), self.canvas.height);
+						self.graphContext.moveTo(Math.ceil(i * yLineInterval) + lineOffset, 0);
+						self.graphContext.lineTo(Math.ceil(i * yLineInterval) + lineOffset, self.canvas.height);
 					}
 
 				}
 			}
 		}
 
-		// define horizontal lines
+		// draw that shit
+		self.graphContext.stroke();
+
+		// reset line style
+		self.graphContext.setLineDash([0]);
+
+		// start drawing horizontal grid lines
+		self.graphContext.beginPath();
+
+		// set styles
+		self.graphContext.strokeStyle = self.config.style.gridColor;
 		self.graphContext.lineWidth = self.config.grid.xSize;
+
+		if(self.config.style.gridLineStyleX === "dotted"){
+			self.graphContext.setLineDash([2,2]);
+		}else if(self.config.style.gridLineStyleX === "dashed"){
+			self.graphContext.setLineDash([3,6]);
+		}
 
 		if(self.config.grid.xSize > 0){
 			// do some complicated shit
@@ -792,8 +819,8 @@
 				for(var i = 0; i < (self.grid.units / self.config.grid.xInterval); i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval));
-						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval));
+						self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
+						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
 					}
 
 				}
@@ -803,8 +830,8 @@
 				for(var i = 0; i < self.config.grid.xCount + 1; i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(0, Math.ceil(i * xLineInterval));
-						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * xLineInterval));
+						self.graphContext.moveTo(0, Math.ceil(i * xLineInterval) + lineOffset);
+						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * xLineInterval) + lineOffset);
 					}
 
 				}
@@ -813,6 +840,9 @@
 
 		// draw that shit
 		self.graphContext.stroke();
+
+		// reset line style
+		self.graphContext.setLineDash([0]);
 
 	}
 
