@@ -98,13 +98,15 @@
 
 		// if range not previously selected, create new range object
 		// TODO - maybe just always start with empty range, persisting is a pain in the ass and may not even be useful
-		self.range = self.$el.data("range") || {
+		// self.range = self.$el.data("range") || {
+		self.range = {
 			from: {},
 			to: {},
 			handles: {
 				left: {},
 				right: {}
-			}
+			},
+			status: {}
 		};
 
 		// set canvas size (used for all canvases and the background div)
@@ -135,6 +137,7 @@
 		}
 
 		// all that mousemove, mouseover, mouseout shit that makes this plugin better than yours
+		self.clearRange();
 		self.rangeEvents();
 
 		// set graph background if that's what you want
@@ -1023,7 +1026,7 @@
 		if(typeof self.rangeCallback === "function"){
 			self.rangeCallback({from: self.range.from.data, to: self.range.to.data});
 		}
-		self.$el.data("range", self.range);
+		// self.$el.data("range", self.range);
 	}
 
 	Plot.prototype.loadRangeImage = function(){
@@ -1036,11 +1039,6 @@
 
 	Plot.prototype.rangeEvents = function(){
 		var self = this,
-			selecting = false,
-			resizable = false,
-			resizing = false,
-			movable = false,
-			moving = false,
 			rect = {},
 			defineRect = function(){
 				// define rect object based on current range
@@ -1093,35 +1091,35 @@
 			}
 
 			if(self.rangeContext){
-				if(!selecting && !moving && !resizing){
+				if(!self.range.status.selecting && !self.range.status.moving && !self.range.status.resizing){
 					if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
 						if(rect.x < rect.handles.left[1]){
 
 							// left range handle is hovered, range is resizable
-							resizable = "left";
-							movable = false;
+							self.range.status.resizable = "left";
+							self.range.status.movable = false;
 							self.$rangeCanvas.css("cursor", "ew-resize");
 
 						}else if(rect.x > rect.handles.right[0]){
 
 							// right range handle is hovered, range is resizable
-							resizable = "right";
-							movable = false;
+							self.range.status.resizable = "right";
+							self.range.status.movable = false;
 							self.$rangeCanvas.css("cursor", "ew-resize");
 
 						}else{
 
 							// range area is hovered, range is movable
-							resizable = false;
-							movable = true;
+							self.range.status.resizable = false;
+							self.range.status.movable = true;
 							self.$rangeCanvas.css("cursor", "all-scroll");
 
 						}
 					}else{
 
 						// range is not resizable or movable
-						resizable = false;
-						movable = false;
+						self.range.status.resizable = false;
+						self.range.status.movable = false;
 						self.$rangeCanvas.css({cursor: "default"});
 
 					}
@@ -1150,15 +1148,15 @@
 					to: rect.to
 				}
 
-				if(resizable){
+				if(self.range.status.resizable){
 
 					// resize range
 					self.$rangeCanvas.mousemove(function(e){
-						resizing = true;
+						self.range.status.resizing = true;
 
-						if(resizable === "left"){
+						if(self.range.status.resizable === "left"){
 							rect.from = e.offsetX;
-						}else if(resizable === "right"){
+						}else if(self.range.status.resizable === "right"){
 							rect.to = e.offsetX;
 						}
 						self.$rangeCanvas.css("cursor", "ew-resize");
@@ -1166,27 +1164,27 @@
 						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
 					}).mouseup(function(e){
-						resizing = false;
+						self.range.status.resizing = false;
 
 						self.$rangeCanvas.unbind("mousemove");
 						self.$rangeCanvas.unbind("mouseup");
 
-						if(resizable){
+						if(self.range.status.resizable){
 							self.returnRange();
 						}
 
 						self.$rangeCanvas.css({cursor: "default"});
 
-						selecting = false;
-						resizable = false;
-						movable = false;
+						self.range.status.selecting = false;
+						self.range.status.resizable = false;
+						self.range.status.movable = false;
 					})
 
-				}else if(movable){
+				}else if(self.range.status.movable){
 
 					// move range
 					self.$rangeCanvas.mousemove(function(e){
-						moving = true;
+						self.range.status.moving = true;
 						
 						rect.delta = rect.click.pos - rect.x;
 
@@ -1220,20 +1218,20 @@
 						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
 					}).mouseup(function(e){
-						moving = false;
+						self.range.status.moving = false;
 
 						self.$rangeCanvas.unbind("mousemove");
 						self.$rangeCanvas.unbind("mouseup");
 
-						if(movable){
+						if(self.range.status.movable){
 							self.returnRange();
 						}
 
 						self.$rangeCanvas.css({cursor: "default"});
 
-						selecting = false;
-						resizable = false;
-						movable = false;
+						self.range.status.selecting = false;
+						self.range.status.resizable = false;
+						self.range.status.movable = false;
 
 					})
 
@@ -1243,8 +1241,8 @@
 					self.$rangeCanvas.mousemove(function(e){
 						e.originalEvent.preventDefault();
 
-						if(!selecting){
-							selecting = true;
+						if(!self.range.status.selecting){
+							self.range.status.selecting = true;
 							rect.from = e.offsetX;
 							self.$rangeCanvas.css("cursor", "ew-resize");
 						}
@@ -1258,15 +1256,15 @@
 						self.$rangeCanvas.unbind("mousemove");
 						self.$rangeCanvas.unbind("mouseup");
 
-						if(selecting){
+						if(self.range.status.selecting){
 							self.returnRange();
 						}
 
 						self.$rangeCanvas.css({cursor: "default"});
 
-						selecting = false;
-						resizable = false;
-						movable = false;
+						self.range.status.selecting = false;
+						self.range.status.resizable = false;
+						self.range.status.movable = false;
 					})
 				}
 			})
