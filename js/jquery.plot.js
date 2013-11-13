@@ -761,6 +761,32 @@
 		// whiskey.
 		var lineOffset = 0.5;
 
+		// I hope you like these snarky comments, because it turns out IE <= 10 doesn't support setLineDash() in canvas!
+		// To fix, extend prototype of CanvasRenderingContext2D with a new dashedLine method, then jump off a very tall building.
+		// use like this: context.dashedLine(x1, y1, x2, y2, dashLength);
+		CanvasRenderingContext2D.prototype.dashedLine = function (x1, y1, x2, y2, dashLength) {
+			if(dashLength == undefined){
+				dashLength = 2;
+			}
+
+			this.moveTo(x1, y1);
+
+			var dX = x2 - x1;
+			var dY = y2 - y1;
+			var dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLength);
+			var dashX = dX / dashes;
+			var dashY = dY / dashes;
+
+			var q = 0;
+
+			while (q++ < dashes){
+				x1 += dashX;
+				y1 += dashY;
+				this[q % 2 == 0 ? 'moveTo' : 'lineTo'](x1, y1);
+			}
+			this[q % 2 == 0 ? 'moveTo' : 'lineTo'](x2, y2);
+		};
+
 		// start drawing vertical grid lines
 		self.graphContext.beginPath();
 
@@ -768,20 +794,24 @@
 		self.graphContext.strokeStyle = self.config.style.gridColor;
 		self.graphContext.lineWidth = self.config.grid.ySize;
 
-		if(self.config.style.gridLineStyleY === "dotted"){
-			self.graphContext.setLineDash([2,2]);
-		}else if(self.config.style.gridLineStyleY === "dashed"){
-			self.graphContext.setLineDash([3,6]);
-		}
-
 		if(self.config.grid.ySize > 0){
 			// do some complicated shit
 			if(self.config.grid.yInterval){
 				for(var i = 0; i < (self.data.length / self.config.grid.yInterval); i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, 0);
-						self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, self.canvas.height);
+						if(self.config.style.gridLineStyleY === "dotted"){
+							self.graphContext.dashedLine(
+								Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset,
+								0,
+								Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset,
+								self.canvas.height,
+								2
+							);
+						}else{
+							self.graphContext.moveTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, 0);
+							self.graphContext.lineTo(Math.ceil(i * self.grid.unitWidth * self.config.grid.yInterval) + lineOffset, self.canvas.height);
+						}
 					}
 
 				}
@@ -791,8 +821,18 @@
 				for(var i = 0; i < self.config.grid.yCount + 1; i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(Math.ceil(i * yLineInterval) + lineOffset, 0);
-						self.graphContext.lineTo(Math.ceil(i * yLineInterval) + lineOffset, self.canvas.height);
+						if(self.config.style.gridLineStyleY === "dotted"){
+							self.graphContext.dashedLine(
+								Math.ceil(i * yLineInterval) + lineOffset,
+								0,
+								Math.ceil(i * yLineInterval) + lineOffset,
+								self.canvas.height,
+								2
+							);
+						}else{
+							self.graphContext.moveTo(Math.ceil(i * yLineInterval) + lineOffset, 0);
+							self.graphContext.lineTo(Math.ceil(i * yLineInterval) + lineOffset, self.canvas.height);
+						}
 					}
 
 				}
@@ -802,9 +842,6 @@
 		// draw that shit
 		self.graphContext.stroke();
 
-		// reset line style
-		self.graphContext.setLineDash([0]);
-
 		// start drawing horizontal grid lines
 		self.graphContext.beginPath();
 
@@ -812,20 +849,24 @@
 		self.graphContext.strokeStyle = self.config.style.gridColor;
 		self.graphContext.lineWidth = self.config.grid.xSize;
 
-		if(self.config.style.gridLineStyleX === "dotted"){
-			self.graphContext.setLineDash([2,2]);
-		}else if(self.config.style.gridLineStyleX === "dashed"){
-			self.graphContext.setLineDash([3,6]);
-		}
-
 		if(self.config.grid.xSize > 0){
 			// do some complicated shit
 			if(self.config.grid.xInterval){
 				for(var i = 0; i < (self.grid.units / self.config.grid.xInterval); i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
-						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
+						if(self.config.style.gridLineStyleX === "dotted"){
+							self.graphContext.dashedLine(
+								0,
+								Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset,
+								self.canvas.width,
+								Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset,
+								2
+							);
+						}else{
+							self.graphContext.moveTo(0, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
+							self.graphContext.lineTo(self.canvas.width, Math.ceil(i * self.grid.unitHeight * self.config.grid.xInterval) + lineOffset);
+						}
 					}
 
 				}
@@ -835,8 +876,18 @@
 				for(var i = 0; i < self.config.grid.xCount + 1; i++){
 
 					if(i > 0){
-						self.graphContext.moveTo(0, Math.ceil(i * xLineInterval) + lineOffset);
-						self.graphContext.lineTo(self.canvas.width, Math.ceil(i * xLineInterval) + lineOffset);
+						if(self.config.style.gridLineStyleX === "dotted"){
+							self.graphContext.dashedLine(
+								0,
+								Math.ceil(i * xLineInterval) + lineOffset,
+								self.canvas.width,
+								Math.ceil(i * xLineInterval) + lineOffset,
+								2
+							);
+						}else{
+							self.graphContext.moveTo(0, Math.ceil(i * xLineInterval) + lineOffset);
+							self.graphContext.lineTo(self.canvas.width, Math.ceil(i * xLineInterval) + lineOffset);
+						}
 					}
 
 				}
@@ -845,9 +896,6 @@
 
 		// draw that shit
 		self.graphContext.stroke();
-
-		// reset line style
-		self.graphContext.setLineDash([0]);
 
 	}
 
