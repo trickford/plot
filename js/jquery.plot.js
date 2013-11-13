@@ -452,8 +452,10 @@
 	Plot.prototype.clearRange = function(){
 		var self = this;
 
-		self.rangeContext = self.$rangeCanvas[0].getContext("2d");
-		self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
+		if(typeof self.$rangeCanvas !== "undefined"){
+			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
+			self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
+		}
 	}
 
 	Plot.prototype.clearNotations = function(){
