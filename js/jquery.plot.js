@@ -299,6 +299,9 @@
 		yLabels.reverse();
 
 		// setup x labels
+		if(self.config.labels.xCount > self.data.length){
+			self.config.labels.xCount = self.data.length;
+		}
 		for(var l = 0; l < self.config.labels.xCount; l++){
 			// determine what labels to show
 			var section = [
