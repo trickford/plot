@@ -59,7 +59,8 @@
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
 					"handleColor": "#868695", // color of range handles
-					"handleImage": null, // image to display for range handles (URI)
+					"handleImage": null, // image to display for range handles (URI) (used for both handles if present)
+															 // accepts a single image url as a string, or { left: <url>, right: <url>} for different images
 					"handleWidth": 10, // width of range handles if no image set
 					"handleHeight": 40, // height of range handles if no image set
 					"gridColor": "#F0F0F0", // color or grid lines
@@ -940,28 +941,40 @@
 
 		if(self.config.style.handleImage){
 
-			if(position.width > self.range.handles.image.width * 2){
-				self.range.handles.width = self.range.handles.image.width;
-				self.range.handles.show = true;
-
-				// place left handle
-				self.rangeContext.drawImage(
-					self.range.handles.image,
-					self.range.from.px - Math.round(self.range.handles.image.width / 2),
-					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-				);
-				self.range.handles.left = [(self.range.from.px - Math.round(self.range.handles.image.width / 2)),(self.range.from.px + Math.round(self.range.handles.image.width / 2))];
-
-				// place right handle
-				self.rangeContext.drawImage(
-					self.range.handles.image,
-					self.range.to.px - Math.round(self.range.handles.image.width / 2),
-					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-				);
-				self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
-			}else{
-				self.range.handles.show = true;
+			var leftImage, rightImage;
+			if(self.range.handles.image) {
+				leftImage = self.range.handles.image;
+				rightImage = self.range.handles.image;
 			}
+			else if (self.range.handles.leftImage && self.range.handles.rightImage) {
+				leftImage = self.range.handles.leftImage;
+				rightImage = self.range.handles.rightImage;
+			}
+			if (leftImage && rightImage) {
+				if(position.width > leftImage.width * 2){
+					self.range.handles.width = leftImage.width;
+					self.range.handles.show = true;
+
+					// place left handle
+					self.rangeContext.drawImage(
+						leftImage,
+						self.range.from.px - Math.round(leftImage.width / 2),
+						(position.height / 2) - Math.round(leftImage.height / 2)
+					);
+					self.range.handles.left = [(self.range.from.px - Math.round(leftImage.width / 2)),(self.range.from.px + Math.round(leftImage.width / 2))];
+
+					// place right handle
+					self.rangeContext.drawImage(
+						rightImage,
+						self.range.to.px - Math.round(rightImage.width / 2),
+						(position.height / 2) - Math.round(rightImage.height / 2)
+					);
+					self.range.handles.right = [(self.range.to.px - Math.round(rightImage.width / 2)),(self.range.to.px + Math.round(rightImage.width / 2))];
+				}else{
+					self.range.handles.show = true;
+				}
+			}
+
 		}else{
 			if(position.width > self.config.style.handleWidth * 2){
 				self.range.handles.width = self.config.style.handleWidth;
@@ -1084,9 +1097,18 @@
 
 	Plot.prototype.loadRangeImage = function(){
 		var self = this;
+		if (typeof self.config.style.handleImage === 'string') {
+			self.range.handles.image = new Image();
+			self.range.handles.image.src = self.config.style.handleImage;
+		}
+		else if (typeof self.config.style.handleImage === 'object') {
+			self.range.handles.leftImage = new Image();
+			self.range.handles.leftImage.src = self.config.style.handleImage.left;
 
-		self.range.handles.image = new Image();
-		self.range.handles.image.src = self.config.style.handleImage;
+			self.range.handles.rightImage = new Image();
+			self.range.handles.rightImage.src = self.config.style.handleImage.right;
+		}
+
 
 	}
 
