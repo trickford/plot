@@ -8,7 +8,9 @@
 				"height": 300, // height of canvas
 				"type": "bar", // "bar" or "line"
 				"range": {
-					"show": true // show range selection
+					"show": true, // show range selection
+					"initialSelection": null 	// object representing the starting state of the selection range
+																	 	// { start: 0, end: 10 }
 				},
 				"grid": {
 					"show": true, // show grid
@@ -59,7 +61,8 @@
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
 					"handleColor": "#868695", // color of range handles
-					"handleImage": null, // image to display for range handles (URI)
+					"handleImage": null, // image to display for range handles (URI) (used for both handles if present)
+															 // accepts a single image url as a string, or { left: <url>, right: <url>} for different images
 					"handleWidth": 10, // width of range handles if no image set
 					"handleHeight": 40, // height of range handles if no image set
 					"gridColor": "#F0F0F0", // color or grid lines
@@ -132,8 +135,9 @@
 		}
 
 		// load range handle images if that's what you want
+		var imagePromise;
 		if(self.config.style.handleImage){
-			self.loadRangeImage();
+			imagePromise = self.loadRangeImage();
 		}
 
 		// all that mousemove, mouseover, mouseout shit that makes this plugin better than yours
@@ -155,6 +159,13 @@
 		// setup labels if that's what you want
 		if(self.config.labels.show){
 			self.createLabels();
+		}
+
+
+		if(self.config.range.initialSelection) {
+			imagePromise.then(function() {
+				self.drawRange(self.$rangeCanvas, self.config.range.initialSelection.start, self.config.range.initialSelection.end);
+			});
 		}
 
 		// return to jQuery chain
@@ -940,28 +951,40 @@
 
 		if(self.config.style.handleImage){
 
-			if(position.width > self.range.handles.image.width * 2){
-				self.range.handles.width = self.range.handles.image.width;
-				self.range.handles.show = true;
-
-				// place left handle
-				self.rangeContext.drawImage(
-					self.range.handles.image,
-					self.range.from.px - Math.round(self.range.handles.image.width / 2),
-					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-				);
-				self.range.handles.left = [(self.range.from.px - Math.round(self.range.handles.image.width / 2)),(self.range.from.px + Math.round(self.range.handles.image.width / 2))];
-
-				// place right handle
-				self.rangeContext.drawImage(
-					self.range.handles.image,
-					self.range.to.px - Math.round(self.range.handles.image.width / 2),
-					(position.height / 2) - Math.round(self.range.handles.image.height / 2)
-				);
-				self.range.handles.right = [(self.range.to.px - Math.round(self.range.handles.image.width / 2)),(self.range.to.px + Math.round(self.range.handles.image.width / 2))];
-			}else{
-				self.range.handles.show = true;
+			var leftImage, rightImage;
+			if(self.range.handles.image) {
+				leftImage = self.range.handles.image;
+				rightImage = self.range.handles.image;
 			}
+			else if (self.range.handles.leftImage && self.range.handles.rightImage) {
+				leftImage = self.range.handles.leftImage;
+				rightImage = self.range.handles.rightImage;
+			}
+			if (leftImage && rightImage) {
+				if(position.width > leftImage.width * 2){
+					self.range.handles.width = leftImage.width;
+					self.range.handles.show = true;
+
+					// place left handle
+					self.rangeContext.drawImage(
+						leftImage,
+						self.range.from.px - Math.round(leftImage.width / 2),
+						(position.height / 2) - Math.round(leftImage.height / 2)
+					);
+					self.range.handles.left = [(self.range.from.px - Math.round(leftImage.width / 2)),(self.range.from.px + Math.round(leftImage.width / 2))];
+
+					// place right handle
+					self.rangeContext.drawImage(
+						rightImage,
+						self.range.to.px - Math.round(rightImage.width / 2),
+						(position.height / 2) - Math.round(rightImage.height / 2)
+					);
+					self.range.handles.right = [(self.range.to.px - Math.round(rightImage.width / 2)),(self.range.to.px + Math.round(rightImage.width / 2))];
+				}else{
+					self.range.handles.show = true;
+				}
+			}
+
 		}else{
 			if(position.width > self.config.style.handleWidth * 2){
 				self.range.handles.width = self.config.style.handleWidth;
@@ -1077,16 +1100,44 @@
 		var self = this;
 
 		if(typeof self.rangeCallback === "function"){
-			self.rangeCallback({from: self.range.from.data, to: self.range.to.data});
+			self.rangeCallback({from: self.range.from.data, to: self.range.to.data, raw: self.range});
 		}
 		// self.$el.data("range", self.range);
 	}
 
 	Plot.prototype.loadRangeImage = function(){
-		var self = this;
 
-		self.range.handles.image = new Image();
-		self.range.handles.image.src = self.config.style.handleImage;
+		var promise = $.Deferred();
+		var self = this;
+		if (typeof self.config.style.handleImage === 'string') {
+			self.range.handles.image = new Image();
+			self.range.handles.image.src = self.config.style.handleImage;
+			promise.resolve();
+		}
+		else if (typeof self.config.style.handleImage === 'object') {
+			var leftPromise = $.Deferred(),
+					rightPromise = $.Deferred();
+
+			self.range.handles.leftImage = new Image();
+			self.range.handles.leftImage.onload = function(){
+				leftPromise.resolve();
+			}
+			self.range.handles.leftImage.src = self.config.style.handleImage.left;
+
+
+			self.range.handles.rightImage = new Image();
+			self.range.handles.rightImage.onload = function() {
+				rightPromise.resolve();
+			}
+			self.range.handles.rightImage.src = self.config.style.handleImage.right;
+
+			$.when(leftPromise, rightPromise).then(function() {
+				promise.resolve();
+			})
+
+		}
+
+		return promise;
 
 	}
 
