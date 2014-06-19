@@ -9,8 +9,9 @@
 				"type": "bar", // "bar" or "line"
 				"range": {
 					"show": true, // show range selection
-					"initialSelection": null 	// object representing the starting state of the selection range
+					"initialSelection": null, // 	// object representing the starting state of the selection range
 																	 	// { start: 0, end: 10 }
+					"invert": false //invert selection overlay
 				},
 				"grid": {
 					"show": true, // show grid
@@ -929,12 +930,28 @@
 		self.rangeContext.fillStyle = self.config.style.rangeColor;
 		self.rangeContext.globalAlpha = self.config.style.rangeOpacity;
 
-		self.rangeContext.fillRect(
-			position.left,
-			position.top,
-			position.width,
-			position.height
-		);
+		if(self.config.range.invert) {
+			self.rangeContext.fillRect(
+				0,
+				position.top,
+				position.left,
+				position.height
+			);
+			self.rangeContext.fillRect(
+				position.left + position.width,
+				position.top,
+				self.rangeContext.canvas.width,
+				position.height
+			);
+
+		} else {
+			self.rangeContext.fillRect(
+				position.left,
+				position.top,
+				position.width,
+				position.height
+			);
+		}
 
 		// save range
 		self.range.from.px = Math.round(position.left);
