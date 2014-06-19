@@ -11,7 +11,8 @@
 					"show": true, // show range selection
 					"initialSelection": null, // 	// object representing the starting state of the selection range
 																	 	// { start: 0, end: 10 }
-					"invert": false //invert selection overlay
+					"invert": false, //invert selection overlay,
+					"hitboxPadding": 0 // additional px to add to the hitbox of the range handles.
 				},
 				"grid": {
 					"show": true, // show grid
@@ -988,7 +989,7 @@
 						self.range.from.px - Math.round(leftImage.width / 2),
 						(position.height / 2) - Math.round(leftImage.height / 2)
 					);
-					self.range.handles.left = [(self.range.from.px - Math.round(leftImage.width / 2)),(self.range.from.px + Math.round(leftImage.width / 2))];
+					self.range.handles.left = [(self.range.from.px - Math.round(leftImage.width / 2) - self.config.range.hitboxPadding),(self.range.from.px + Math.round(leftImage.width / 2) + self.config.range.hitboxPadding)];
 
 					// place right handle
 					self.rangeContext.drawImage(
@@ -996,7 +997,7 @@
 						self.range.to.px - Math.round(rightImage.width / 2),
 						(position.height / 2) - Math.round(rightImage.height / 2)
 					);
-					self.range.handles.right = [(self.range.to.px - Math.round(rightImage.width / 2)),(self.range.to.px + Math.round(rightImage.width / 2))];
+					self.range.handles.right = [(self.range.to.px - Math.round(rightImage.width / 2) - self.config.range.hitboxPadding),(self.range.to.px + Math.round(rightImage.width / 2) + self.config.range.hitboxPadding)];
 				}else{
 					self.range.handles.show = true;
 				}
