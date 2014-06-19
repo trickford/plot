@@ -935,13 +935,13 @@
 				0,
 				position.top,
 				position.left,
-				position.height
+				position.height + 2
 			);
 			self.rangeContext.fillRect(
 				position.left + position.width,
 				position.top,
 				self.rangeContext.canvas.width,
-				position.height
+				position.height + 2
 			);
 
 		} else {
@@ -949,7 +949,7 @@
 				position.left,
 				position.top,
 				position.width,
-				position.height
+				position.height + 2
 			);
 		}
 
