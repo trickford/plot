@@ -1,9 +1,9 @@
 {
   "name": "plot",
-  "version": "0.1.0",
-  "homepage": "https://github.com/spoontwisted/plot",
+  "version": "0.2",
+  "homepage": "https://github.com/trickford/plot",
   "authors": [
-    "Rick Ford <spoontwisted@gmail.com>"
+    "Rick Ford <rickfordrick@gmail.com>"
   ],
   "main": "js/jquery.plot.js",
   "moduleType": [
