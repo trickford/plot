@@ -1185,8 +1185,8 @@
 
 		// get cursor location, determine if a resize or move event is applicable
 		self.$el.mousemove(function(e){
-			rect.x = e.offsetX;
-			rect.y = e.offsetY;
+			rect.x = e.offsetX || e.originalEvent.layerX;
+			rect.y = e.offsetY || e.originalEvent.layerY;
 
 			// so jQuery mousemove returns cursor offsetX and offsetY of child elements, not the element you actually selected...
 			// for divs and spans, fix the cursor position calculation
@@ -1265,7 +1265,7 @@
 
 				// add click location to rect object for move actions
 				rect.click = {
-					pos: e.offsetX,
+					pos: e.offsetX || e.originalEvent.layerX,
 					from: rect.from,
 					to: rect.to
 				}
@@ -1277,9 +1277,9 @@
 						self.range.status.resizing = true;
 
 						if(self.range.status.resizable === "left"){
-							rect.from = e.offsetX;
+							rect.from = e.offsetX || e.originalEvent.layerX;
 						}else if(self.range.status.resizable === "right"){
-							rect.to = e.offsetX;
+							rect.to = e.offsetX || e.originalEvent.layerX;
 						}
 						self.$rangeCanvas.css("cursor", "ew-resize");
 
@@ -1365,10 +1365,10 @@
 
 						if(!self.range.status.selecting){
 							self.range.status.selecting = true;
-							rect.from = e.offsetX;
+							rect.from = e.offsetX || e.originalEvent.layerX;
 							self.$rangeCanvas.css("cursor", "ew-resize");
 						}
-						rect.to = e.offsetX;
+						rect.to = e.offsetX || e.originalEvent.layerX;
 
 						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
 
