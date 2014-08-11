@@ -62,6 +62,7 @@
 					"lineFillImage": false, // URL for chart fill image, overrides lineFillColor
 					"rangeColor": "#E5E5E5", // color of range selection
 					"rangeOpacity": 0.5, // opacity of range in range selection
+					"outsideRangeCursor": "default", // cursor to use hovering outside of range selection
 					"handleColor": "#868695", // color of range handles
 					"handleImage": null, // image to display for range handles (URI) (used for both handles if present)
 															 // accepts a single image url as a string, or { left: <url>, right: <url>} for different images
@@ -1242,7 +1243,7 @@
 						// range is not resizable or movable
 						self.range.status.resizable = false;
 						self.range.status.movable = false;
-						self.$rangeCanvas.css({cursor: "default"});
+						self.$rangeCanvas.css({cursor: self.config.style.outsideRangeCursor});
 
 					}
 				}
