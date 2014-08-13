@@ -492,8 +492,8 @@
 			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
 			self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
 
-      self.rangeButtonsContext = self.$rangeButtonCanvas[0].getContext("2d");
-      self.rangeButtonsContext.clearRect(0, 0, self.canvas.width + 2 * self.config.range.handlePadding, self.canvas.height);
+			self.rangeButtonsContext = self.$rangeButtonCanvas[0].getContext("2d");
+			self.rangeButtonsContext.clearRect(0, 0, self.canvas.width + 2 * self.config.range.handlePadding, self.canvas.height);
 		}
 	}
 
