@@ -12,7 +12,8 @@
 					"initialSelection": null, // 	// object representing the starting state of the selection range
 																	 	// { start: 0, end: 10 }
 					"invert": false, //invert selection overlay,
-					"hitboxPadding": 0 // additional px to add to the hitbox of the range handles.
+					"hitboxPadding": 0, // additional px to add to the hitbox of the range handles.
+					"handlePadding": 0 // padding to add to the left and right of the range to allow for the handles to appear above the edges
 				},
 				"grid": {
 					"show": true, // show grid
@@ -47,6 +48,7 @@
 					"bg": "bg", // class for graph canvas
 					"graph": "graph", // class for graph canvas
 					"range": "range", // class for range canvas
+					"rangeButtons": "range-buttons", // class for the range buttons canvas
 					"label": "label", // class for label divs
 					"info": "info" // class for info div
 				},
@@ -125,6 +127,15 @@
 			border: (self.config.style.borderColor ? "1px solid " + self.config.style.borderColor : "none")
 		};
 
+		self.rangeCanvas = {
+			position: "absolute",
+			width: (self.config.labels.show) ? self.config.width - self.config.style.labelLeftWidth - (self.config.style.borderColor ? 2 : 0) : self.config.width - (self.config.style.borderColor ? 2 : 0) + 2 * self.config.range.handlePadding,
+			height: (self.config.labels.show) ? self.config.height - self.config.style.labelBottomHeight - (self.config.style.borderColor ? 2 : 0) : self.config.height - (self.config.style.borderColor ? 2 : 0),
+			left: (self.config.labels.show) ? self.config.style.labelLeftWidth : (self.config.range.handlePadding ? -(self.config.range.handlePadding) : 0),
+			top: 0,
+			'pointer-events': 'none'
+		};
+
 		self.defineElements();
 
 		// if elements exist, clear them, otherwise create them
@@ -183,6 +194,7 @@
 		var bg = $("<div>").addClass(self.config.classes.bg),
 			canvas = $("<canvas>").addClass(self.config.classes.graph),
 			rangeCanvas = $("<canvas>").addClass(self.config.classes.range),
+			rangeButtonsCanvas = $("<canvas>").addClass(self.config.classes.rangeButtons),
 			labelLeft = $("<div>").addClass(self.config.classes.label + "-left"),
 			labelBottom = $("<div>").addClass(self.config.classes.label + "-bottom"),
 			info = $("<div>").addClass(self.config.classes.info),
@@ -232,6 +244,11 @@
 			width: self.canvas.width
 		}).css(self.canvas).appendTo(self.$el);
 
+		rangeButtonsCanvas.attr({
+			height: self.canvas.height,
+			width: self.canvas.width + 2 * self.config.range.handlePadding
+		}).css(self.rangeCanvas).appendTo(self.$el);
+
 		if(self.config.labels.show){
 			// create left side label container and set dimensions and positioning
 			labelLeft.attr({
@@ -273,6 +290,7 @@
 			}
 			// get context
 			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
+			self.rangeButtonsContext = self.$rangeButtonCanvas[0].getContext("2d");
 		}
 	}
 
@@ -285,6 +303,7 @@
 		self.$canvas = self.$el.find("canvas." + self.config.classes.graph);
 		if(self.config.range.show){
 			self.$rangeCanvas = self.$el.find("canvas." + self.config.classes.range);
+			self.$rangeButtonCanvas = self.$el.find("canvas." + self.config.classes.rangeButtons);
 		}
 
 		if(self.config.labels.show){
@@ -472,6 +491,9 @@
 		if(typeof self.$rangeCanvas !== "undefined"){
 			self.rangeContext = self.$rangeCanvas[0].getContext("2d");
 			self.rangeContext.clearRect(0,0,self.canvas.width,self.canvas.height);
+
+			self.rangeButtonsContext = self.$rangeButtonCanvas[0].getContext("2d");
+			self.rangeButtonsContext.clearRect(0, 0, self.canvas.width + 2 * self.config.range.handlePadding, self.canvas.height);
 		}
 	}
 
@@ -985,17 +1007,17 @@
 					self.range.handles.show = true;
 
 					// place left handle
-					self.rangeContext.drawImage(
+					self.rangeButtonsContext.drawImage(
 						leftImage,
-						self.range.from.px - Math.round(leftImage.width / 2),
+						position.left + self.config.range.handlePadding - Math.round(leftImage.width / 2),
 						(position.height / 2) - Math.round(leftImage.height / 2)
 					);
 					self.range.handles.left = [(self.range.from.px - Math.round(leftImage.width / 2) - self.config.range.hitboxPadding),(self.range.from.px + Math.round(leftImage.width / 2) + self.config.range.hitboxPadding)];
 
 					// place right handle
-					self.rangeContext.drawImage(
+					self.rangeButtonsContext.drawImage(
 						rightImage,
-						self.range.to.px - Math.round(rightImage.width / 2),
+						self.range.to.px + self.config.range.handlePadding - Math.round(rightImage.width / 2),
 						(position.height / 2) - Math.round(rightImage.height / 2)
 					);
 					self.range.handles.right = [(self.range.to.px - Math.round(rightImage.width / 2) - self.config.range.hitboxPadding),(self.range.to.px + Math.round(rightImage.width / 2) + self.config.range.hitboxPadding)];
