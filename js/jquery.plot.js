@@ -238,16 +238,16 @@
 			width: self.canvas.width
 		}).css(self.canvas).appendTo(self.$el);
 
+		rangeButtonsCanvas.attr({
+			height: self.canvas.height,
+			width: self.canvas.width + 2 * self.config.range.handlePadding
+		}).css(self.rangeCanvas).appendTo(self.$el);
+
 		// create range container and set dimensions and positioning
 		rangeCanvas.attr({
 			height: self.canvas.height,
 			width: self.canvas.width
 		}).css(self.canvas).appendTo(self.$el);
-
-		rangeButtonsCanvas.attr({
-			height: self.canvas.height,
-			width: self.canvas.width + 2 * self.config.range.handlePadding
-		}).css(self.rangeCanvas).appendTo(self.$el);
 
 		if(self.config.labels.show){
 			// create left side label container and set dimensions and positioning
@@ -1294,7 +1294,6 @@
 				}
 
 				if(self.range.status.resizable){
-
 					// resize range
 					self.$rangeCanvas.mousemove(function(e){
 						self.range.status.resizing = true;
@@ -1313,6 +1312,7 @@
 
 						self.$rangeCanvas.unbind("mousemove");
 						self.$rangeCanvas.unbind("mouseup");
+            			self.$rangeCanvas.unbind('mouseout');
 
 						if(self.range.status.resizable){
 							self.returnRange();
@@ -1321,9 +1321,40 @@
 						self.$rangeCanvas.css({cursor: "default"});
 
 						self.range.status.selecting = false;
-						self.range.status.resizable = false;
-						self.range.status.movable = false;
-					})
+						self.range.status.resizing = false;
+						self.range.status.moving = false;
+					}).mouseout(function (e) {
+						if (e.offsetX >= self.$el.width() || e.offsetX <= 0) {
+							if (e.offsetX >= self.$el.width()) {
+								if (self.range.status.resizable === "left") {
+									rect.from = self.$el.width();
+								} else if (self.range.status.resizable === "right") {
+									rect.to = self.$el.width();
+								}
+							} else if (e.offsetX <= 0) {
+								if (self.range.status.resizable === "left") {
+									rect.from = 0;
+								} else if (self.range.status.resizable === "right") {
+									rect.to = 0;
+								}
+							}
+							self.$rangeCanvas.unbind("mousemove");
+							self.$rangeCanvas.unbind("mouseup");
+							self.$rangeCanvas.unbind('mouseout');
+
+							self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+							if (self.range.status.resizable) {
+								self.returnRange();
+							}
+
+							self.$rangeCanvas.css({cursor: "default"});
+
+							self.range.status.selecting = false;
+							self.range.status.resizing = false;
+							self.range.status.moving = false;
+						}
+					});
 
 				}else if(self.range.status.movable){
 
