@@ -955,13 +955,13 @@
 		self.rangeButtonsContext.globalAlpha = self.config.style.rangeOpacity;
 
 		if(self.config.range.invert) {
-			self.rangeContext.fillRect(
+			self.rangeButtonsContext.fillRect(
 				0,
 				position.top,
 				position.left + self.config.range.handlePadding,
 				position.height + 2
 			);
-			self.rangeContext.fillRect(
+			self.rangeButtonsContext.fillRect(
 				position.left + position.width + self.config.range.handlePadding,
 				position.top,
 				self.rangeContext.canvas.width,
