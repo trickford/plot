@@ -951,26 +951,26 @@
 		self.clearRange();
 
 		// draw rectangle
-		self.rangeContext.fillStyle = self.config.style.rangeColor;
-		self.rangeContext.globalAlpha = self.config.style.rangeOpacity;
+		self.rangeButtonsContext.fillStyle = self.config.style.rangeColor;
+		self.rangeButtonsContext.globalAlpha = self.config.style.rangeOpacity;
 
 		if(self.config.range.invert) {
-			self.rangeContext.fillRect(
+			self.rangeButtonsContext.fillRect(
 				0,
 				position.top,
-				position.left,
+				position.left + self.config.range.handlePadding,
 				position.height + 2
 			);
-			self.rangeContext.fillRect(
-				position.left + position.width,
+			self.rangeButtonsContext.fillRect(
+				position.left + position.width + self.config.range.handlePadding,
 				position.top,
 				self.rangeContext.canvas.width,
 				position.height + 2
 			);
 
 		} else {
-			self.rangeContext.fillRect(
-				position.left,
+			self.rangeButtonsContext.fillRect(
+				position.left + self.config.range.handlePadding,
 				position.top,
 				position.width,
 				position.height + 2
@@ -988,7 +988,7 @@
 		self.range.to.data = self.data[self.range.to.index];
 
 		// draw handles
-		self.rangeContext.globalAlpha = 1;
+		self.rangeButtonsContext.globalAlpha = 1;
 
 		if(self.config.style.handleImage){
 
