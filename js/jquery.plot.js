@@ -1040,7 +1040,7 @@
 					self.config.style.handleWidth,
 					self.config.style.handleHeight
 				);
-				self.range.handles.left = [(self.range.from.px - Math.round(self.config.style.handleWidth / 2)),(self.range.from.px + Math.round(self.config.style.handleWidth / 2))];
+				self.range.handles.left = [(self.range.from.px - Math.round(self.config.style.handleWidth / 2) - self.config.range.hitboxPadding),(self.range.from.px + Math.round(self.config.style.handleWidth / 2)) + self.config.range.hitboxPadding];
 
 				// place right handle
 				self.rangeContext.fillRect(
@@ -1237,7 +1237,9 @@
 
 			if(self.rangeContext){
 				if(!self.range.status.selecting && !self.range.status.moving && !self.range.status.resizing){
-					if(typeof rect.from !== "undefined" && rect.x > rect.handles.left[0] && rect.x < rect.handles.right[1]){
+					if(typeof rect.from !== "undefined" &&
+						rect.x > rect.handles.left[0] &&
+						rect.x < rect.handles.right[1]){
 						if(rect.x < rect.handles.left[1]){
 
 							// left range handle is hovered, range is resizable
@@ -1406,10 +1408,26 @@
 						self.$rangeCanvas.css({cursor: "default"});
 
 						self.range.status.selecting = false;
-						self.range.status.resizable = false;
-						self.range.status.movable = false;
+						self.range.status.resizing = false;
+						self.range.status.moving = false;
 
-					})
+					}).mouseout(function(e) {
+						self.range.status.moving = false;
+
+						self.$rangeCanvas.unbind("mousemove");
+						self.$rangeCanvas.unbind("mouseup");
+						self.$rangeCanvas.unbind("mouseout");
+
+						if(self.range.status.movable){
+							self.returnRange();
+						}
+
+						self.$rangeCanvas.css({cursor: "default"});
+
+						self.range.status.selecting = false;
+						self.range.status.resizing = false;
+						self.range.status.moving = false;
+					});
 
 				}else{
 
