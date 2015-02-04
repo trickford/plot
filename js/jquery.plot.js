@@ -1449,6 +1449,7 @@
 
 						self.$rangeCanvas.unbind("mousemove");
 						self.$rangeCanvas.unbind("mouseup");
+						self.$rangeCanvas.unbind("mouseout");
 
 						if(self.range.status.selecting){
 							self.returnRange();
@@ -1457,9 +1458,33 @@
 						self.$rangeCanvas.css({cursor: "default"});
 
 						self.range.status.selecting = false;
-						self.range.status.resizable = false;
-						self.range.status.movable = false;
-					})
+						self.range.status.resizing = false;
+						self.range.status.moving = false;
+					}).mouseout(function(e) {
+						if (e.offsetX >= self.$el.width()) {
+							rect.to = self.range.to.px = self.$el.width();
+						} else if (e.offsetX <= 0) {
+							rect.to = self.range.to.px = 0;
+						}
+
+						self.drawRange(self.$rangeCanvas, rect.from, rect.to);
+
+						rect.width = self.range.to.px - self.range.from.px;
+
+						self.$rangeCanvas.unbind("mousemove");
+						self.$rangeCanvas.unbind("mouseup");
+						self.$rangeCanvas.unbind("mouseout");
+
+						if(self.range.status.selecting){
+							self.returnRange();
+						}
+
+						self.$rangeCanvas.css({cursor: "default"});
+
+						self.range.status.selecting = false;
+						self.range.status.resizing = false;
+						self.range.status.moving = false;
+					});
 				}
 			})
 		}
